@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<scenario schemaVersion="1.0.19" name="null" id="null">
+    <NetworkList>
+        <network id="2" dt="6" name="Test network for new students">
+            <position>
+                <point lng="-122.23713571482806" lat="37.49949489825767"/>
+            </position>
+            <NodeList>
+                <node id="-40441" type="simple">
+                    <outputs>
+                        <output link_id="-3784300"/>
+                        <output link_id="-312183"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-26638402"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.23974717063903" lat="37.499302402594225"/>
+                    </position>
+                </node>
+                <node id="-101474" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.2150267204094" lat="37.48923908478181"/>
+                    </position>
+                </node>
+                <node id="-40442" type="simple">
+                    <outputs>
+                        <output link_id="-6"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-3784304"/>
+                        <input link_id="-151665"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.22907076057434" lat="37.49507866451923"/>
+                    </position>
+                </node>
+                <node id="-136209" type="simple">
+                    <outputs>
+                        <output link_id="-1"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-32593705"/>
+                        <input link_id="-2"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.24395145317078" lat="37.502969104645175"/>
+                    </position>
+                </node>
+                <node id="-150646" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.25269854232788" lat="37.51077"/>
+                    </position>
+                </node>
+                <node id="-3784301" type="simple">
+                    <outputs>
+                        <output link_id="-3784301"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-3784300"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.2376226203662" lat="37.49784122726657"/>
+                    </position>
+                </node>
+                <node id="-3784302" type="simple">
+                    <outputs>
+                        <output link_id="-3784302"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-3784301"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.23584364212682" lat="37.49704986402513"/>
+                    </position>
+                </node>
+                <node id="-3784303" type="simple">
+                    <outputs>
+                        <output link_id="-3784303"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-3784302"/>
+                        <input link_id="-5"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.23337344765572" lat="37.49630616521733"/>
+                    </position>
+                </node>
+                <node id="-3784304" type="simple">
+                    <outputs>
+                        <output link_id="-3784304"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-3784303"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.2320192126376" lat="37.495916605707826"/>
+                    </position>
+                </node>
+                <node id="-14794402" type="simple">
+                    <outputs>
+                        <output link_id="-14794402"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-6"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.22611795154256" lat="37.49422309146362"/>
+                    </position>
+                </node>
+                <node id="-14794403" type="simple">
+                    <outputs>
+                        <output link_id="-14794403"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-14794402"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.2241885490394" lat="37.493533984150936"/>
+                    </position>
+                </node>
+                <node id="-14794404" type="simple">
+                    <outputs>
+                        <output link_id="-14794404"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-14794403"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.22233578650598" lat="37.49272242399345"/>
+                    </position>
+                </node>
+                <node id="-14794405" type="simple">
+                    <outputs>
+                        <output link_id="-14794405"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-14794404"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.22027287806262" lat="37.49184392181751"/>
+                    </position>
+                </node>
+                <node id="-32593701" type="simple">
+                    <outputs>
+                        <output link_id="-32593701"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-32593700"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.25136348816704" lat="37.50953892544379"/>
+                    </position>
+                </node>
+                <node id="-32593702" type="simple">
+                    <outputs>
+                        <output link_id="-3"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-32593701"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.24994743274344" lat="37.508319755347614"/>
+                    </position>
+                </node>
+                <node id="-32593704" type="simple">
+                    <outputs>
+                        <output link_id="-32593704"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-3"/>
+                        <input link_id="-4"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.24758430719432" lat="37.50622240051158"/>
+                    </position>
+                </node>
+                <node id="-32593705" type="simple">
+                    <outputs>
+                        <output link_id="-32593705"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-32593704"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.2458545110715" lat="37.5046744232373"/>
+                    </position>
+                </node>
+                <node id="-26638401" type="simple">
+                    <outputs>
+                        <output link_id="-26638401"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-1"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.24205180167584" lat="37.501300173958704"/>
+                    </position>
+                </node>
+                <node id="-26638402" type="simple">
+                    <outputs>
+                        <output link_id="-26638402"/>
+                    </outputs>
+                    <inputs>
+                        <input link_id="-26638401"/>
+                    </inputs>
+                    <position>
+                        <point lng="-122.24062495924305" lat="37.50004953480363"/>
+                    </position>
+                </node>
+                <node id="-104003" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.23360873010635" lat="37.49502093043205"/>
+                    </position>
+                </node>
+                <node id="-40424" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.23737489814756" lat="37.4971065815867"/>
+                    </position>
+                </node>
+                <node id="-1" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.24688064689634" lat="37.504773876569395"/>
+                    </position>
+                </node>
+                <node id="-2" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.250238772583" lat="37.50830594670072"/>
+                    </position>
+                </node>
+                <node id="-3" type="terminal">
+                    <outputs/>
+                    <inputs/>
+                    <position>
+                        <point lng="-122.23345887298582" lat="37.49576846941002"/>
+                    </position>
+                </node>
+            </NodeList>
+            <LinkList>
+                <link id="-3784300" type="freeway" length="0.1545897829975258" lanes="4">
+                    <begin node_id="-40441"/>
+                    <end node_id="-3784301"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-3784301" type="freeway" length="0.11203249236858434" lanes="4">
+                    <begin node_id="-3784301"/>
+                    <end node_id="-3784302"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-3784302" type="freeway" length="0.14462756382001804" lanes="4">
+                    <begin node_id="-3784302"/>
+                    <end node_id="-3784303"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-3784303" type="freeway" length="0.07884606780799269" lanes="4">
+                    <begin node_id="-3784303"/>
+                    <end node_id="-3784304"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-3784304" type="freeway" length="0.17144950435514675" lanes="4">
+                    <begin node_id="-3784304"/>
+                    <end node_id="-40442"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-14794402" type="freeway" length="0.11646328641253034" lanes="4">
+                    <begin node_id="-14794402"/>
+                    <end node_id="-14794403"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-14794403" type="freeway" length="0.11596468932181751" lanes="4">
+                    <begin node_id="-14794403"/>
+                    <end node_id="-14794404"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-14794404" type="freeway" length="0.1282504479996656" lanes="4">
+                    <begin node_id="-14794404"/>
+                    <end node_id="-14794405"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-14794405" type="freeway" length="0.3399912205553374" lanes="4">
+                    <begin node_id="-14794405"/>
+                    <end node_id="-101474"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-32593700" type="freeway" length="0.11280739043398362" lanes="4">
+                    <begin node_id="-150646"/>
+                    <end node_id="-32593701"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-32593701" type="freeway" length="0.11426139264104183" lanes="4">
+                    <begin node_id="-32593701"/>
+                    <end node_id="-32593702"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-32593704" type="freeway" length="0.14341687466199454" lanes="4">
+                    <begin node_id="-32593704"/>
+                    <end node_id="-32593705"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-32593705" type="freeway" length="0.15751972806439635" lanes="4">
+                    <begin node_id="-32593705"/>
+                    <end node_id="-136209"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-26638401" type="freeway" length="0.11676452538526748" lanes="4">
+                    <begin node_id="-26638401"/>
+                    <end node_id="-26638402"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-26638402" type="freeway" length="0.07028073370125713" lanes="4">
+                    <begin node_id="-26638402"/>
+                    <end node_id="-40441"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-151665" type="onramp" length="0.2682429744308503" lanes="2">
+                    <begin node_id="-104003"/>
+                    <end node_id="-40442"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-312183" type="offramp" length="0.20019491323007735" lanes="2">
+                    <begin node_id="-40441"/>
+                    <end node_id="-40424"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-1" type="freeway" length="0.15561011646391817" lanes="4">
+                    <begin node_id="-136209"/>
+                    <end node_id="-26638401"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-2" type="onramp" length="0.20944141377480718" lanes="1">
+                    <begin node_id="-1"/>
+                    <end node_id="-136209"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-3" type="freeway" length="0.1946007015104781" lanes="4">
+                    <begin node_id="-32593702"/>
+                    <end node_id="-32593704"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-4" type="onramp" length="0.20561516637633126" lanes="1">
+                    <begin node_id="-2"/>
+                    <end node_id="-32593704"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-5" type="freeway" length="0.16356080924902186" lanes="1">
+                    <begin node_id="-3"/>
+                    <end node_id="-3784303"/>
+                    <dynamics type="CTM"/>
+                </link>
+                <link id="-6" type="freeway" length="0.1730423442341909" lanes="4">
+                    <begin node_id="-40442"/>
+                    <end node_id="-14794402"/>
+                    <dynamics type="CTM"/>
+                </link>
+            </LinkList>
+        </network>
+    </NetworkList>
+    <SensorList>
+        <sensor type="loop" id="-1">
+            <display_position>
+                <point elevation="0" lng="-122.23046981712002" lat="37.495470255867275"/>
+            </display_position>
+            <link_reference id="-3784304"/>
+            <parameters>
+                <parameter value="401860" name="data_id"/>
+                <parameter value="freeway" name="link_type"/>
+                <parameter value="0" name="start_time"/>
+                <parameter value="0" name="length"/>
+                <parameter value="4" name="lanes"/>
+                <parameter value="101" name="hwy_name"/>
+                <parameter value="867.5406" name="offset_in_link"/>
+                <parameter value="401860" name="vds"/>
+                <parameter value="408.823" name="postmile"/>
+            </parameters>
+            <table name="data_sources">
+                <column_names>
+                    <column_name key="false" name="url"/>
+                    <column_name key="false" name="dt"/>
+                    <column_name key="false" name="format"/>
+                </column_names>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+            </table>
+        </sensor>
+        <sensor type="loop" id="-2">
+            <display_position>
+                <point elevation="0" lng="-122.2495085236296" lat="37.50793426845867"/>
+            </display_position>
+            <link_reference id="-3"/>
+            <parameters>
+                <parameter value="401651" name="data_id"/>
+                <parameter value="freeway" name="link_type"/>
+                <parameter value="0" name="start_time"/>
+                <parameter value="0" name="length"/>
+                <parameter value="4" name="lanes"/>
+                <parameter value="101" name="hwy_name"/>
+                <parameter value="383.6298" name="offset_in_link"/>
+                <parameter value="401651" name="vds"/>
+                <parameter value="410.123" name="postmile"/>
+            </parameters>
+            <table name="data_sources">
+                <column_names>
+                    <column_name key="false" name="url"/>
+                    <column_name key="false" name="dt"/>
+                    <column_name key="false" name="format"/>
+                </column_names>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+            </table>
+        </sensor>
+        <sensor type="loop" id="-3">
+            <display_position>
+                <point elevation="0" lng="-122.22865666307526" lat="37.49497546960403"/>
+            </display_position>
+            <link_reference id="-6"/>
+            <parameters>
+                <parameter value="401876" name="data_id"/>
+                <parameter value="freeway" name="link_type"/>
+                <parameter value="0" name="start_time"/>
+                <parameter value="0" name="length"/>
+                <parameter value="4" name="lanes"/>
+                <parameter value="101" name="hwy_name"/>
+                <parameter value="134.44112" name="offset_in_link"/>
+                <parameter value="401876" name="vds"/>
+                <parameter value="408.003" name="postmile"/>
+            </parameters>
+            <table name="data_sources">
+                <column_names>
+                    <column_name key="false" name="url"/>
+                    <column_name key="false" name="dt"/>
+                    <column_name key="false" name="format"/>
+                </column_names>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+            </table>
+        </sensor>
+        <sensor type="loop" id="-4">
+            <display_position>
+                <point elevation="0" lng="-122.24516299155547" lat="37.50406382621783"/>
+            </display_position>
+            <link_reference id="-32593705"/>
+            <parameters>
+                <parameter value="401928" name="data_id"/>
+                <parameter value="freeway" name="link_type"/>
+                <parameter value="0" name="start_time"/>
+                <parameter value="0" name="length"/>
+                <parameter value="4" name="lanes"/>
+                <parameter value="101" name="hwy_name"/>
+                <parameter value="1000.2439" name="offset_in_link"/>
+                <parameter value="401928" name="vds"/>
+                <parameter value="409.793" name="postmile"/>
+            </parameters>
+            <table name="data_sources">
+                <column_names>
+                    <column_name key="false" name="url"/>
+                    <column_name key="false" name="dt"/>
+                    <column_name key="false" name="format"/>
+                </column_names>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+            </table>
+        </sensor>
+        <sensor type="loop" id="-5">
+            <display_position>
+                <point elevation="0" lng="-122.23438515375746" lat="37.496583647207245"/>
+            </display_position>
+            <link_reference id="-3784302"/>
+            <parameters>
+                <parameter value="401861" name="data_id"/>
+                <parameter value="freeway" name="link_type"/>
+                <parameter value="0" name="start_time"/>
+                <parameter value="0" name="length"/>
+                <parameter value="4" name="lanes"/>
+                <parameter value="101" name="hwy_name"/>
+                <parameter value="499.90936" name="offset_in_link"/>
+                <parameter value="401861" name="vds"/>
+                <parameter value="408.853" name="postmile"/>
+            </parameters>
+            <table name="data_sources">
+                <column_names>
+                    <column_name key="false" name="url"/>
+                    <column_name key="false" name="dt"/>
+                    <column_name key="false" name="format"/>
+                </column_names>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+                <row>
+                    <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+                    <column>300</column>
+                    <column>PeMS Data Clearinghouse</column>
+                </row>
+            </table>
+        </sensor>
+    </SensorList>
+    <InitialDensitySet/>
+    <SplitRatioProfileSet/>
+    <EventSet/>
+    <DemandProfileSet/>
+    <ControllerSet/>
+    <FundamentalDiagramProfileSet/>
+</scenario>
