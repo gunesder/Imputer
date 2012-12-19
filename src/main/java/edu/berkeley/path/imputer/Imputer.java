@@ -33,12 +33,24 @@ public class Imputer {
 	private String inputFileName;
 	private String outputFileName;
 	private Scenario mainScenario;
-	private ArrayList<Link> linkStructure  = new ArrayList<Link>();
-	//private ArrayList<Detector> detectorList = new ArrayList<Detector>();
+	private static HashMap<Integer, Node> nodes = new HashMap<Integer, Node>();
+	private static HashMap<Integer, Link> links = new HashMap<Integer, Link>();
 	private static HashMap<Integer, Detector> detectors = new HashMap<Integer, Detector>();
 	private Interval timeInterval;
 	
 	// getters and setters
+	public static HashMap<Integer, Node> getNodes() {
+		return nodes;
+	}
+	public static void setNodes(HashMap<Integer, Node> nodes) {
+		Imputer.nodes = nodes;
+	}
+	public static HashMap<Integer, Link> getLinks() {
+		return links;
+	}
+	public static void setLinks(HashMap<Integer, Link> links) {
+		Imputer.links = links;
+	}
 	public Interval getTimeInterval() {
 		return timeInterval;
 	}
@@ -47,28 +59,12 @@ public class Imputer {
 		this.timeInterval = timeInterval;
 	}
 
-	/*public ArrayList<Detector> getDetectorList() {
-		return detectorList;
-	}
-
-	public void setDetectorList(ArrayList<Detector> detectorList) {
-		this.detectorList = detectorList;
-	}*/
-
-	public ArrayList<Link> getLinkStructure() {
-		return linkStructure;
-	}
-
-	public HashMap getDetectors() {
+	public HashMap<Integer, Detector> getDetectors() {
 		return detectors;
 	}
 
-	public void setDetectors(HashMap detectors) {
-		this.detectors = detectors;
-	}
-
-	public void setLinkStructure(ArrayList<Link> linkStructure) {
-		this.linkStructure = linkStructure;
+	public static void setDetectors(HashMap<Integer, Detector> detectors) {
+		Imputer.detectors = detectors;
 	}
 
 	public Scenario getMainScenario() {
@@ -124,8 +120,7 @@ public class Imputer {
 	 */
 	
 	public edu.berkeley.path.beats.jaxb.Scenario readAndUnmarshallXML() throws JAXBException, FileNotFoundException, SiriusException {
-		
-		
+				
 		JAXBContext jaxbContext = JAXBContext.newInstance("edu.berkeley.path.beats.jaxb");
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 		javax.xml.validation.Schema schema = this.getSchema();
@@ -151,14 +146,52 @@ public class Imputer {
 	}
 	
 	/**
-	 * Reads the network geometry from mainScenario and populates the linkStructure
+	 * Reads the network geometry from mainScenario and populates the nodes hashmap
 	 */
-	public void createLinkStructureFromMainScenario() {
-		// this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(0).
+	public void createNodeStructureFromMainScenario() {
+		int i,j;
+		for (i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().size(); i++){
+			int[] inputs = null, outputs = null;
+			Node n = new Node();
+			n.setNodeID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getId()));
+			n.setNodeType(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getType());
+			for (j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().size(); j++){
+				inputs[j] = Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().get(j).getLinkId());
+				outputs[j] = Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().get(j).getLinkId());
+			}
+			n.setInLinks(inputs);
+			n.setOutLinks(outputs);
+			nodes.put(n.getNodeID(), n);
+		}
 	}
 	
 	/**
-	 * Reads the SensorList from mainScenario and populates the detectors structure
+	 * Reads the network geometry from mainScenario and populates the links hashmap
+	 */
+	public void createLinkStructureFromMainScenario() {
+		int i;
+		for (i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
+			Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();
+			l.setLinkID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getId()));
+			l.setUpNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getBegin().getNodeId())));
+			l.setDownNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getEnd().getNodeId())));
+			l.setUpLinks(l.getUpNode().getInLinks());
+			l.setDownLinks(l.getDownNode().getOutLinks());
+			l.setLength(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLength().doubleValue());
+			l.setLanesML(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLanes().intValue());
+			for(int key: detectors.keySet()){
+				if (detectors.get(key).getLinkAssoc() == l.getLinkID()){
+					hasDetector = true;
+					detectorML = detectors.get(key);
+				}
+			}
+			l.setHasDetector(hasDetector);
+			l.setDetectorML(detectorML);	
+		}
+	}
+	
+	/**
+	 * Reads the SensorList from mainScenario and populates the detectors hashmap
 	 */
 	public void createDetectorListFromMainScenario() {
 		int i;
@@ -169,12 +202,13 @@ public class Imputer {
 			d.setSensorID(Integer.parseInt(sensorIDString));
 			d.setSensorType(this.mainScenario.getSensorList().getSensor().get(i).getType());
 			d.setSourceAddress("n/a");
+			d.setLinkAssoc(Integer.parseInt(this.mainScenario.getSensorList().getSensor().get(i).getLinkReference().getId()));
 			detectors.put(d.getSensorID(), d);
 		}
 	}
 	
 	/**
-	 * Reads the data from database and writes into detectorList
+	 * Reads the data from database and writes into detectors hashmap
 	 * @throws DatabaseException 
 	 */
 	public void readDataIntoDetectorListFromDatabase() throws DatabaseException {
@@ -215,5 +249,14 @@ public class Imputer {
 		}
 				
 	}
+	
+	/**
+	 * Translates the link structure into the cell structure depending on healthy detector locations
+	 */
+	public void createCellStructure() {
+		
+	}
+	
+	
 
 }

@@ -10,16 +10,16 @@ public class Link {
 	
 	// fields
 	private int linkID;
-	private int upNode;
-	private int downNode;
+	private Node upNode;
+	private Node downNode;
 	private int[] upLinks;
 	private int[] downLinks;
 	private double length;
 	private int lanesML;
 	private int lanesHOV;
 	private boolean hasDetector;
-	private int detectorML;
-	private int detectorHOV;
+	private Detector detectorML;
+	private Detector detectorHOV;
 	
 	// getters and setters
 	public int getLinkID() {
@@ -28,16 +28,16 @@ public class Link {
 	public void setLinkID(int linkID) {
 		this.linkID = linkID;
 	}
-	public int getUpNode() {
+	public Node getUpNode() {
 		return upNode;
 	}
-	public void setUpNode(int upNode) {
+	public void setUpNode(Node upNode) {
 		this.upNode = upNode;
 	}
-	public int getDownNode() {
+	public Node getDownNode() {
 		return downNode;
 	}
-	public void setDownNode(int downNode) {
+	public void setDownNode(Node downNode) {
 		this.downNode = downNode;
 	}
 	public int[] getUpLinks() {
@@ -76,16 +76,16 @@ public class Link {
 	public void setHasDetector(boolean hasDetector) {
 		this.hasDetector = hasDetector;
 	}
-	public int getDetectorML() {
+	public Detector getDetectorML() {
 		return detectorML;
 	}
-	public void setDetectorML(int detectorML) {
+	public void setDetectorML(Detector detectorML) {
 		this.detectorML = detectorML;
 	}
-	public int getDetectorHOV() {
+	public Detector getDetectorHOV() {
 		return detectorHOV;
 	}
-	public void setDetectorHOV(int detectorHOV) {
+	public void setDetectorHOV(Detector detectorHOV) {
 		this.detectorHOV = detectorHOV;
 	}	
 	
