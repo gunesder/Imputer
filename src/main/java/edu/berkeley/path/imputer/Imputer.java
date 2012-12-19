@@ -34,7 +34,8 @@ public class Imputer {
 	private String outputFileName;
 	private Scenario mainScenario;
 	private static HashMap<Integer, Node> nodes = new HashMap<Integer, Node>();
-	private static HashMap<Integer, Link> links = new HashMap<Integer, Link>();
+	private static LinkedList<Link> links = new LinkedList<Link>();
+	private static LinkedList<Cell> cells = new LinkedList<Cell>();
 	private static HashMap<Integer, Detector> detectors = new HashMap<Integer, Detector>();
 	private Interval timeInterval;
 	
@@ -45,47 +46,39 @@ public class Imputer {
 	public static void setNodes(HashMap<Integer, Node> nodes) {
 		Imputer.nodes = nodes;
 	}
-	public static HashMap<Integer, Link> getLinks() {
+	public static LinkedList<Link> getLinks() {
 		return links;
 	}
-	public static void setLinks(HashMap<Integer, Link> links) {
+	public static void setLinks(LinkedList<Link> links) {
 		Imputer.links = links;
 	}
 	public Interval getTimeInterval() {
 		return timeInterval;
 	}
-
 	public void setTimeInterval(Interval timeInterval) {
 		this.timeInterval = timeInterval;
 	}
-
 	public HashMap<Integer, Detector> getDetectors() {
 		return detectors;
 	}
-
 	public static void setDetectors(HashMap<Integer, Detector> detectors) {
 		Imputer.detectors = detectors;
 	}
-
 	public Scenario getMainScenario() {
 		return mainScenario;
 	}
-
 	public void setMainScenario(Scenario mainScenario) {
 		this.mainScenario = mainScenario;
 	}
 	public String getInputFileName() {
 		return inputFileName;
 	}
-
 	public void setInputFileName(String inputFileName) {
 		this.inputFileName = inputFileName;
 	}
-
 	public String getOutputFileName() {
 		return outputFileName;
 	}
-
 	public void setOutputFileName(String outputFileName) {
 		this.outputFileName = outputFileName;
 	}
@@ -186,7 +179,8 @@ public class Imputer {
 				}
 			}
 			l.setHasDetector(hasDetector);
-			l.setDetectorML(detectorML);	
+			l.setDetectorML(detectorML);
+			links.add(l);
 		}
 	}
 	
@@ -254,7 +248,9 @@ public class Imputer {
 	 * Translates the link structure into the cell structure depending on healthy detector locations
 	 */
 	public void createCellStructure() {
-		
+		for(Link l:links){
+			
+		}
 	}
 	
 	
