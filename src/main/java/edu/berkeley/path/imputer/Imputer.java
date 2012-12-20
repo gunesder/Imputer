@@ -144,13 +144,16 @@ public class Imputer {
 	public void createNodeStructureFromMainScenario() {
 		int i,j;
 		for (i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().size(); i++){
-			int[] inputs = null, outputs = null;
+			ArrayList<Integer> inputs = new ArrayList<Integer>();
+			ArrayList<Integer> outputs = new ArrayList<Integer>();
 			Node n = new Node();
 			n.setNodeID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getId()));
 			n.setNodeType(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getType());
 			for (j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().size(); j++){
-				inputs[j] = Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().get(j).getLinkId());
-				outputs[j] = Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().get(j).getLinkId());
+				inputs.add(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().get(j).getLinkId()));
+			}
+			for (j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().size(); j++){
+				outputs.add(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().get(j).getLinkId()));
 			}
 			n.setInLinks(inputs);
 			n.setOutLinks(outputs);
@@ -164,24 +167,63 @@ public class Imputer {
 	public void createLinkStructureFromMainScenario() {
 		int i;
 		for (i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
-			Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();
-			l.setLinkID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getId()));
-			l.setUpNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getBegin().getNodeId())));
-			l.setDownNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getEnd().getNodeId())));
-			l.setUpLinks(l.getUpNode().getInLinks());
-			l.setDownLinks(l.getDownNode().getOutLinks());
-			l.setLength(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLength().doubleValue());
-			l.setLanesML(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLanes().intValue());
-			for(int key: detectors.keySet()){
-				if (detectors.get(key).getLinkAssoc() == l.getLinkID()){
-					hasDetector = true;
-					detectorML = detectors.get(key);
+			// collect only mainline links in the links list
+			if (this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getType().equals("freeway")){
+				Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();
+				l.setLinkID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getId()));
+				l.setUpNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getBegin().getNodeId())));
+				l.setDownNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getEnd().getNodeId())));
+				l.setUpLinks(l.getUpNode().getInLinks());
+				l.setDownLinks(l.getDownNode().getOutLinks());
+				l.setLength(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLength().doubleValue());
+				l.setLanesML(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLanes().intValue());
+				for(int key: detectors.keySet()){
+					if (detectors.get(key).getLinkAssoc() == l.getLinkID()){
+						hasDetector = true;
+						detectorML = detectors.get(key);
+					}
+				}
+				l.setHasDetector(hasDetector);
+				l.setDetectorML(detectorML);
+				links.add(l);
+			}
+		}
+		// sort links
+		links = this.recursiveLinkSort(links);
+		
+	}
+	
+	/**
+	 * Sorts the static LinkedList links in the order they appear on the freeway
+	 */
+	private LinkedList<Link> recursiveLinkSort(LinkedList<Link> links2) {
+		
+		if (links2.size() == 1){
+			
+			return links2;
+			
+		} else {
+			
+			ListIterator<Link> itr1 = links2.listIterator();
+			while (itr1.hasNext()){
+				Link temp = itr1.next();
+				int tempindex = itr1.nextIndex();
+				// if this loop makes any switches, set the flag to true
+				if (links2.getFirst().getUpNode().getNodeID() == temp.getDownNode().getNodeID()){
+					links2.remove(tempindex);
+					links2.addFirst(temp);			
+					return this.recursiveLinkSort(links2);
 				}
 			}
-			l.setHasDetector(hasDetector);
-			l.setDetectorML(detectorML);
-			links.add(l);
+		
+			// assign last n-1 links to links3
+			LinkedList<Link> links3 = new LinkedList<Link>();
+			links3 = links2;
+			links3.remove(0);				
+			return this.recursiveLinkSort(links3);			
+						
 		}
+		
 	}
 	
 	/**
@@ -248,9 +290,17 @@ public class Imputer {
 	 * Translates the link structure into the cell structure depending on healthy detector locations
 	 */
 	public void createCellStructure() {
-		for(Link l:links){
-			
-		}
+		ListIterator<Link> itr1 = links.listIterator();
+		while (itr1.hasNext()){
+			Cell c = new Cell();
+			if (itr1.next().isHasDetector()){
+				ListIterator<Link> itr2 = itr1;
+				while (!itr2.next().isHasDetector()){
+					c.addLink(itr2.next());
+				}
+			cells.add(c);
+			}			
+		}		
 	}
 	
 	

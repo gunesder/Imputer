@@ -27,7 +27,10 @@ public class ImputationRunner
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();
     	imp.createDetectorListFromMainScenario();
+    	imp.createNodeStructureFromMainScenario();
+    	imp.createLinkStructureFromMainScenario();
+    	imp.createCellStructure();
     	imp.readDataIntoDetectorListFromDatabase();
-    	imp.marshallIntoXML(imp.getMainScenario());
+    	//imp.marshallIntoXML(imp.getMainScenario());
     }
 }

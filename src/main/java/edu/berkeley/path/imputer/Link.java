@@ -1,5 +1,7 @@
 package edu.berkeley.path.imputer;
 
+import java.util.ArrayList;
+
 import edu.berkeley.path.beats.jaxb.Scenario;
 
 /** Link class to represent the network as a succession of links
@@ -12,8 +14,8 @@ public class Link {
 	private int linkID;
 	private Node upNode;
 	private Node downNode;
-	private int[] upLinks;
-	private int[] downLinks;
+	private ArrayList<Integer> upLinks = new ArrayList<Integer>();
+	private ArrayList<Integer> downLinks = new ArrayList<Integer>();
 	private double length;
 	private int lanesML;
 	private int lanesHOV;
@@ -40,16 +42,16 @@ public class Link {
 	public void setDownNode(Node downNode) {
 		this.downNode = downNode;
 	}
-	public int[] getUpLinks() {
+	public ArrayList<Integer> getUpLinks() {
 		return upLinks;
 	}
-	public void setUpLinks(int[] upLinks) {
+	public void setUpLinks(ArrayList<Integer> upLinks) {
 		this.upLinks = upLinks;
 	}
-	public int[] getDownLinks() {
+	public ArrayList<Integer> getDownLinks() {
 		return downLinks;
 	}
-	public void setDownLinks(int[] downLinks) {
+	public void setDownLinks(ArrayList<Integer> downLinks) {
 		this.downLinks = downLinks;
 	}
 	public double getLength() {

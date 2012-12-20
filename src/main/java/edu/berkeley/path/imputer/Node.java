@@ -1,11 +1,13 @@
 package edu.berkeley.path.imputer;
 
+import java.util.ArrayList;
+
 public class Node {
 	// fields
 	private int nodeID;
 	private String nodeType;
-	private int[] inLinks;
-	private int[] outLinks;
+	private ArrayList<Integer> inLinks = new ArrayList<Integer>();
+	private ArrayList<Integer> outLinks = new ArrayList<Integer>();
 	
 	// getters and setters
 	public int getNodeID() {
@@ -20,16 +22,16 @@ public class Node {
 	public void setNodeType(String nodeType) {
 		this.nodeType = nodeType;
 	}
-	public int[] getInLinks() {
+	public ArrayList<Integer> getInLinks() {
 		return inLinks;
 	}
-	public void setInLinks(int[] inLinks) {
+	public void setInLinks(ArrayList<Integer> inLinks) {
 		this.inLinks = inLinks;
 	}
-	public int[] getOutLinks() {
+	public ArrayList<Integer> getOutLinks() {
 		return outLinks;
 	}
-	public void setOutLinks(int[] outLinks) {
+	public void setOutLinks(ArrayList<Integer> outLinks) {
 		this.outLinks = outLinks;
 	}
 
