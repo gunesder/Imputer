@@ -204,23 +204,31 @@ public class Imputer {
 			
 		} else {
 			
+			boolean swapMade = false;
 			ListIterator<Link> itr1 = links2.listIterator();
 			while (itr1.hasNext()){
 				Link temp = itr1.next();
 				int tempindex = itr1.nextIndex();
 				// if this loop makes any switches, set the flag to true
 				if (links2.getFirst().getUpNode().getNodeID() == temp.getDownNode().getNodeID()){
-					links2.remove(tempindex);
-					links2.addFirst(temp);			
+					swapMade = true;
+					links2.addFirst(temp);
+					links2.remove(tempindex);								
 					return this.recursiveLinkSort(links2);
 				}
 			}
-		
+			
+			if(!swapMade){
 			// assign last n-1 links to links3
-			LinkedList<Link> links3 = new LinkedList<Link>();
-			links3 = links2;
-			links3.remove(0);				
-			return this.recursiveLinkSort(links3);			
+				LinkedList<Link> links3 = new LinkedList<Link>();
+				Link temp = links2.getFirst();
+				links2.removeFirst();				
+				links3 = this.recursiveLinkSort(links2);
+				links3.addFirst(temp);
+				return links3;
+			} else {
+				return links2;
+			}
 						
 		}
 		
@@ -290,16 +298,23 @@ public class Imputer {
 	 * Translates the link structure into the cell structure depending on healthy detector locations
 	 */
 	public void createCellStructure() {
-		ListIterator<Link> itr1 = links.listIterator();
-		while (itr1.hasNext()){
-			Cell c = new Cell();
-			if (itr1.next().isHasDetector()){
-				ListIterator<Link> itr2 = itr1;
-				while (!itr2.next().isHasDetector()){
-					c.addLink(itr2.next());
+		
+		int i = 0;
+				
+		while (i < links.size()-1){
+			
+			if (links.get(i).isHasDetector() & links.get(i).getDetectorML().getHealthStatus() == 100){
+				Cell c = new Cell();
+				c.addLink(links.get(i));
+				while (!links.get(i+1).isHasDetector() & i < links.size()-2 | (links.get(i+1).isHasDetector() & links.get(i+1).getDetectorML().getHealthStatus() != 100)){
+					c.addLink(links.get(i+1));
+					i++;
 				}
-			cells.add(c);
-			}			
+				cells.add(c);
+			}
+						
+			i++;
+					
 		}		
 	}
 	

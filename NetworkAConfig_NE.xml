@@ -396,7 +396,7 @@
         <dynamics type="CTM"/>
         
       </link>
-      <link lanes="1" length="0.16356080924902186" type="freeway" id="-5">
+      <link lanes="1" length="0.16356080924902186" type="onramp" id="-5">
         
         <begin node_id="-3"/>
         <end node_id="-3784303"/>
