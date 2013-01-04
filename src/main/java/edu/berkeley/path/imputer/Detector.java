@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Detector {
 	
 	// fields
+	private FDParameters fdParams = new FDParameters();
 	private int sensorID;
 	private CharSequence sensorType;
 	private String sourceFileName;
@@ -24,6 +25,12 @@ public class Detector {
 	private int linkAssoc;
 	
 	// getters and setters
+	public FDParameters getFdParams() {
+		return fdParams;
+	}
+	public void setFdParams(FDParameters fdParams) {
+		this.fdParams = fdParams;
+	}
 	public int getLinkAssoc() {
 		return linkAssoc;
 	}

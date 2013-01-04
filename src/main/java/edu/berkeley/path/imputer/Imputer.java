@@ -142,17 +142,16 @@ public class Imputer {
 	 * Reads the network geometry from mainScenario and populates the nodes hashmap
 	 */
 	public void createNodeStructureFromMainScenario() {
-		int i,j;
-		for (i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().size(); i++){
+		for (int i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().size(); i++){
 			ArrayList<Integer> inputs = new ArrayList<Integer>();
 			ArrayList<Integer> outputs = new ArrayList<Integer>();
 			Node n = new Node();
 			n.setNodeID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getId()));
 			n.setNodeType(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getType());
-			for (j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().size(); j++){
+			for (int j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().size(); j++){
 				inputs.add(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getInputs().getInput().get(j).getLinkId()));
 			}
-			for (j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().size(); j++){
+			for (int j=0; j<this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().size(); j++){
 				outputs.add(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getNodeList().getNode().get(i).getOutputs().getOutput().get(j).getLinkId()));
 			}
 			n.setInLinks(inputs);
@@ -165,8 +164,7 @@ public class Imputer {
 	 * Reads the network geometry from mainScenario and populates the links hashmap
 	 */
 	public void createLinkStructureFromMainScenario() {
-		int i;
-		for (i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
+		for (int i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
 			// collect only mainline links in the links list
 			if (this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getType().equals("freeway")){
 				Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();
@@ -238,9 +236,8 @@ public class Imputer {
 	 * Reads the SensorList from mainScenario and populates the detectors hashmap
 	 */
 	public void createDetectorListFromMainScenario() {
-		int i;
 		String sensorIDString;
-		for (i=0; i<this.mainScenario.getSensorList().getSensor().size(); i++){
+		for (int i=0; i<this.mainScenario.getSensorList().getSensor().size(); i++){
 			Detector d = new Detector();
 			sensorIDString = this.mainScenario.getSensorList().getSensor().get(i).getParameters().getParameter().get(7).getValue();
 			d.setSensorID(Integer.parseInt(sensorIDString));
@@ -264,19 +261,6 @@ public class Imputer {
 		}
 		List<PeMSStationAggregate> stationsAggregate = stationAggregateReader.read(this.timeInterval,vdsIDs,PeMSAggregate.AggregationLevel.PEMS_5MIN);
 		
-		// Read 5 minute data into the hashmap
-		int i;
-		for (i=0; i<stationsAggregate.size(); i++){
-			// find the detector corresponding to the current ID in the data vector and fill the fields accordingly
-			Detector d = detectors.get(stationsAggregate.get(i).getVdsId().intValue());
-			d.addDatumToSpeed(stationsAggregate.get(i).getTotal().getAvgSpeed());
-			d.addDatumToFlow(stationsAggregate.get(i).getTotal().getFlow());
-			d.addDatumToDensity(stationsAggregate.get(i).getTotal().getAvgOccupancy());
-			if(i<detectors.size()){
-				d.setHealthStatus(stationsAggregate.get(i).getTotal().getObserved());
-			}
-		}
-		
 		// Read absolute detector info into the hashmap
 		PeMSStationReader stationReader = new PeMSStationReader(new DBParams());
 		for (int key: detectors.keySet()){
@@ -291,7 +275,31 @@ public class Imputer {
 			d.setLongitude(station.getLongitude());
 			d.setNumberOfLanes(station.getLaneCount());
 		}
-				
+		
+		// Read 5 minute data into the hashmap
+		for (int i=0; i<stationsAggregate.size(); i++){
+			// find the detector corresponding to the current ID in the data vector and fill the fields accordingly
+			Detector d = detectors.get(stationsAggregate.get(i).getVdsId().intValue());
+			d.addDatumToSpeed(stationsAggregate.get(i).getTotal().getAvgSpeed());
+			d.addDatumToFlow(stationsAggregate.get(i).getTotal().getFlow()*12/d.getNumberOfLanes()); // to get the hourly rate at 5 minute granularity, multiply by 12
+			d.addDatumToDensity(stationsAggregate.get(i).getTotal().getFlow()*12/stationsAggregate.get(i).getTotal().getAvgSpeed()/d.getNumberOfLanes());
+			if(i<detectors.size()){
+				d.setHealthStatus(stationsAggregate.get(i).getTotal().getObserved());
+			}
+		}
+								
+	}
+	
+	/**
+	 * Calibrates fundamental diagram parameters for detectors
+	 */
+	public void calibrateFundemantalDiagrams() {
+		
+		for (int key: detectors.keySet()){
+			FDCalibrator fdCalib = new FDCalibrator();
+			detectors.put(key, fdCalib.calibrateParameters(detectors.get(key)));
+		}
+		
 	}
 	
 	/**
@@ -315,7 +323,8 @@ public class Imputer {
 						
 			i++;
 					
-		}		
+		}	
+		i = 0;
 	}
 	
 	
