@@ -327,6 +327,12 @@ public class Imputer {
 		i = 0;
 	}
 	
+	/**
+	 * Method to invoke the imputation algorithm
+	 */
+	public void runImputation(){
+		
+	}
 	
 
 }
