@@ -6,7 +6,7 @@ public class Detector {
 	
 	// fields
 	private FDParameters fdParams = new FDParameters();
-	private int sensorID;
+	private int sensorID = 0;
 	private CharSequence sensorType;
 	private String sourceFileName;
 	private String sourceAddress;
@@ -91,18 +91,42 @@ public class Detector {
 	public ArrayList<Double> getSpeedData() {
 		return speedData;
 	}
+		public double[] getSpeedDataArray() {
+			Double[] d = speedData.toArray(new Double[speedData.size()]);
+			double[] dd = null;
+			for(int i=0;i<d.length;i++){  
+				 dd[i] = d[i].doubleValue();  
+			}  
+			return dd;
+		}		
 	public void setSpeedData(ArrayList<Double> speedData) {
 		this.speedData = speedData;
 	}
 	public ArrayList<Double> getDensityData() {
 		return densityData;
 	}
+		public double[] getDensityDataArray() {
+			Double[] d = densityData.toArray(new Double[densityData.size()]);
+			double[] dd = null;
+			for(int i=0;i<d.length;i++){  
+				 dd[i] = d[i].doubleValue();  
+			}  
+			return dd;
+		}
 	public void setDensityData(ArrayList<Double> densityData) {
 		this.densityData = densityData;
 	}
 	public ArrayList<Double> getFlowData() {
 		return flowData;
 	}
+		public double[] getFlowDataArray() {
+			Double[] d = flowData.toArray(new Double[flowData.size()]);
+			double[] dd = null;
+			for(int i=0;i<d.length;i++){  
+				 dd[i] = d[i].doubleValue();  
+			}  
+			return dd;
+		}
 	public void setFlowData(ArrayList<Double> flowData) {
 		this.flowData = flowData;
 	}

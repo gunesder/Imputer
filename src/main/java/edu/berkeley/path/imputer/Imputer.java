@@ -7,6 +7,7 @@ import javax.xml.*;
 import javax.xml.bind.*;
 import javax.xml.validation.SchemaFactory;
 
+import org.apache.commons.math.linear.RealVector;
 import org.joda.time.Interval;
 
 import core.DatabaseException;
@@ -14,7 +15,6 @@ import core.DatabaseException;
 import edu.berkeley.path.beats.jaxb.*;
 import edu.berkeley.path.beats.simulator.JaxbObjectFactory;
 import edu.berkeley.path.beats.simulator.SiriusException;
-import edu.berkeley.path.beats.util.ScenarioUtil;
 
 import edu.berkeley.path.model_elements.PeMSAggregate;
 import edu.berkeley.path.model_elements.PeMSStation;
@@ -34,23 +34,31 @@ public class Imputer {
 	private String outputFileName;
 	private Scenario mainScenario;
 	private static HashMap<Integer, Node> nodes = new HashMap<Integer, Node>();
-	private static LinkedList<Link> links = new LinkedList<Link>();
+	private static HashMap<Integer, Link> links = new HashMap<Integer, Link>();
+	private static LinkedList<Link> mainlineLinks = new LinkedList<Link>();
 	private static LinkedList<Cell> cells = new LinkedList<Cell>();
 	private static HashMap<Integer, Detector> detectors = new HashMap<Integer, Detector>();
 	private Interval timeInterval;
+	public static double totalTimeInHours;
 	
 	// getters and setters
 	public static HashMap<Integer, Node> getNodes() {
 		return nodes;
 	}
+	public static double getTotalTimeInHours() {
+		return totalTimeInHours;
+	}
+	public static void setTotalTimeInHours(double totalTimeInHours) {
+		Imputer.totalTimeInHours = totalTimeInHours;
+	}
 	public static void setNodes(HashMap<Integer, Node> nodes) {
 		Imputer.nodes = nodes;
 	}
-	public static LinkedList<Link> getLinks() {
-		return links;
+	public static LinkedList<Link> getmainlineLinks() {
+		return mainlineLinks;
 	}
-	public static void setLinks(LinkedList<Link> links) {
-		Imputer.links = links;
+	public static void setmainlineLinks(LinkedList<Link> links) {
+		Imputer.mainlineLinks = links;
 	}
 	public Interval getTimeInterval() {
 		return timeInterval;
@@ -82,6 +90,24 @@ public class Imputer {
 	public void setOutputFileName(String outputFileName) {
 		this.outputFileName = outputFileName;
 	}
+	public static HashMap<Integer, Link> getLinks() {
+		return links;
+	}
+	public static void setLinks(HashMap<Integer, Link> links) {
+		Imputer.links = links;
+	}
+	public static LinkedList<Link> getMainlineLinks() {
+		return mainlineLinks;
+	}
+	public static void setMainlineLinks(LinkedList<Link> mainlineLinks) {
+		Imputer.mainlineLinks = mainlineLinks;
+	}
+	public static LinkedList<Cell> getCells() {
+		return cells;
+	}
+	public static void setCells(LinkedList<Cell> cells) {
+		Imputer.cells = cells;
+	}
 
 	// constructors
 	public Imputer(String inFileName, String outFileName, org.joda.time.DateTime startTime, org.joda.time.Duration totalTime) throws FileNotFoundException, JAXBException, SiriusException {
@@ -89,6 +115,7 @@ public class Imputer {
 		outputFileName = outFileName;
 		mainScenario = this.readAndUnmarshallXML();
 		timeInterval = new Interval(startTime, totalTime);
+		totalTimeInHours = (timeInterval.getEndMillis()-timeInterval.getStartMillis())/(1000*60*60);
 	}
 	
 	// methods
@@ -165,6 +192,35 @@ public class Imputer {
 	 */
 	public void createLinkStructureFromMainScenario() {
 		for (int i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
+			Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();
+			l.setLinkType(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getType());
+			l.setLinkID(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getId()));
+			l.setUpNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getBegin().getNodeId())));
+			l.setDownNode(nodes.get(Integer.parseInt(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getEnd().getNodeId())));
+			l.setUpLinks(l.getUpNode().getInLinks());
+			l.setDownLinks(l.getDownNode().getOutLinks());
+			l.setLength(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLength().doubleValue());
+			l.setLanesML(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getLanes().intValue());
+			for(int key: detectors.keySet()){
+				if (detectors.get(key).getLinkAssoc() == l.getLinkID()){
+					hasDetector = true;
+					detectorML = detectors.get(key);
+				}
+			}
+			l.setHasDetector(hasDetector);
+			l.setDetectorML(detectorML);
+			
+			links.put(l.getLinkID(),l);
+			
+		}
+				
+	}
+	
+	/**
+	 * Reads the network geometry from mainScenario and populates the mainlineLinks list
+	 */
+	public void createMainlineLinkStructureFromMainScenario() {
+		for (int i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
 			// collect only mainline links in the links list
 			if (this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getType().equals("freeway")){
 				Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();
@@ -183,16 +239,16 @@ public class Imputer {
 				}
 				l.setHasDetector(hasDetector);
 				l.setDetectorML(detectorML);
-				links.add(l);
+				mainlineLinks.add(l);
 			}
 		}
-		// sort links
-		links = this.recursiveLinkSort(links);
+		// sort mainline links
+		mainlineLinks = this.recursiveLinkSort(mainlineLinks);
 		
 	}
 	
 	/**
-	 * Sorts the static LinkedList links in the order they appear on the freeway
+	 * Sorts the static LinkedList mainlineLinks in the order they appear on the freeway
 	 */
 	private LinkedList<Link> recursiveLinkSort(LinkedList<Link> links2) {
 		
@@ -294,7 +350,6 @@ public class Imputer {
 	 * Calibrates fundamental diagram parameters for detectors
 	 */
 	public void calibrateFundemantalDiagrams() {
-		
 		for (int key: detectors.keySet()){
 			FDCalibrator fdCalib = new FDCalibrator();
 			detectors.put(key, fdCalib.calibrateParameters(detectors.get(key)));
@@ -309,15 +364,46 @@ public class Imputer {
 		
 		int i = 0;
 				
-		while (i < links.size()-1){
+		while (i < mainlineLinks.size()-1){
 			
-			if (links.get(i).isHasDetector() & links.get(i).getDetectorML().getHealthStatus() == 100){
-				Cell c = new Cell();
-				c.addLink(links.get(i));
-				while (!links.get(i+1).isHasDetector() & i < links.size()-2 | (links.get(i+1).isHasDetector() & links.get(i+1).getDetectorML().getHealthStatus() != 100)){
-					c.addLink(links.get(i+1));
+			if (mainlineLinks.get(i).isHasDetector() & mainlineLinks.get(i).getDetectorML().getHealthStatus() == 100){
+				Cell c = new Cell((int) totalTimeInHours*60/5);
+				c.addLink(mainlineLinks.get(i));
+				c.setDetectorML(mainlineLinks.get(i).getDetectorML());
+				c.setDetectorHOV(mainlineLinks.get(i).getDetectorHOV());
+				while (!mainlineLinks.get(i+1).isHasDetector() & i < mainlineLinks.size()-2 | (mainlineLinks.get(i+1).isHasDetector() & mainlineLinks.get(i+1).getDetectorML().getHealthStatus() != 100)){
+					c.addLink(mainlineLinks.get(i+1));
 					i++;
 				}
+				// Onramps and Offramps in the Cell
+				for (Link l:c.getLinks()){
+					
+					c.addToOnrampPerLink(l.getUpNode().getInLinks().size()-1);
+					c.addToOfframpPerLink(l.getDownNode().getOutLinks().size()-1);
+					
+					for (int linkID:l.getUpNode().getInLinks()){
+						if (links.get(linkID).getLinkType().equals("onramp")){
+							if (links.get(linkID).getDetectorML().getFlowData().isEmpty() | links.get(linkID).getDetectorML().getHealthStatus() != 100){
+								c.addToImputeOR(true);
+							} else {
+								c.addColumnToMeasuredOnrampFlow((RealVector) links.get(linkID).getDetectorML().getFlowData());
+								c.addToImputeOR(false);
+							}
+						}
+					}
+					for (int linkID:l.getDownNode().getOutLinks()){
+						if (links.get(linkID).getLinkType().equals("offramp")){
+							if (links.get(linkID).getDetectorML().getFlowData().isEmpty() | links.get(linkID).getDetectorML().getHealthStatus() != 100){
+								c.addToImputeFR(true);
+							} else {
+								c.addColumnToMeasuredOfframpFlow((RealVector) links.get(linkID).getDetectorML().getFlowData());
+								c.addToImputeFR(false);
+							}
+						}
+						
+					}
+				}
+				
 				cells.add(c);
 			}
 						
@@ -331,6 +417,9 @@ public class Imputer {
 	 * Method to invoke the imputation algorithm
 	 */
 	public void runImputation(){
+		
+		ImputationCoreAlgorithm imp_algo = new ImputationCoreAlgorithm(cells,detectors);
+		imp_algo.run();
 		
 	}
 	

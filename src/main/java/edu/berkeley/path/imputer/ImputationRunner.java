@@ -29,9 +29,11 @@ public class ImputationRunner
     	imp.createDetectorListFromMainScenario();
     	imp.createNodeStructureFromMainScenario();
     	imp.createLinkStructureFromMainScenario();
+    	imp.createMainlineLinkStructureFromMainScenario();
     	imp.readDataIntoDetectorListFromDatabase();
     	imp.calibrateFundemantalDiagrams();
     	imp.createCellStructure();
+    	imp.runImputation();
     	imp.marshallIntoXML(imp.getMainScenario());
     }
 }

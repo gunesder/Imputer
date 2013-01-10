@@ -12,6 +12,7 @@ public class Link {
 	
 	// fields
 	private int linkID;
+	private String linkType;
 	private Node upNode;
 	private Node downNode;
 	private ArrayList<Integer> upLinks = new ArrayList<Integer>();
@@ -26,6 +27,12 @@ public class Link {
 	// getters and setters
 	public int getLinkID() {
 		return linkID;
+	}
+	public String getLinkType() {
+		return linkType;
+	}
+	public void setLinkType(String linkType) {
+		this.linkType = linkType;
 	}
 	public void setLinkID(int linkID) {
 		this.linkID = linkID;
