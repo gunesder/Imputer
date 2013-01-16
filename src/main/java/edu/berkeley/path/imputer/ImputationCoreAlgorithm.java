@@ -1,9 +1,6 @@
 package edu.berkeley.path.imputer;
 
 import java.util.*;
-import org.apache.commons.math.linear.BlockRealMatrix;
-import org.apache.commons.math.linear.RealVector;
-import org.apache.commons.math.analysis.interpolation.LinearInterpolator;
 
 public class ImputationCoreAlgorithm {
 	
@@ -11,8 +8,8 @@ public class ImputationCoreAlgorithm {
 		// primary fields
 		private LinkedList<Cell> cellData = new LinkedList<Cell>();
 		private HashMap<Integer,Detector> detectorList = new HashMap<Integer,Detector>();
-		private double demandTimeStep = 5/60; // [hours] 5 minute default
-		private double simulationTimeStep = 5/60/60; // [hours] 5 second default
+		private double demandTimeStep = 5.0/60.0; // [hours] 5 minute default
+		private double simulationTimeStep = 5.0/60.0/60.0; // [hours] 5 second default
 		// derived fields (vector quantities)
 		private ArrayList<Double> linkLength = new ArrayList<Double>();
 		private ArrayList<Integer> lane = new ArrayList<Integer>();
@@ -27,12 +24,13 @@ public class ImputationCoreAlgorithm {
 		private ArrayList<Boolean> orPresent = new ArrayList<Boolean>();
 		private ArrayList<Boolean> frPresent = new ArrayList<Boolean>();
 		// derived fields (matrix quantities)
-		private BlockRealMatrix measuredDensity = new BlockRealMatrix(288,1);
-		private BlockRealMatrix measuredFlow = new BlockRealMatrix(288,1);
-		private BlockRealMatrix measuredSpeed = new BlockRealMatrix(288,1);
-		private BlockRealMatrix measuredOrFlow = new BlockRealMatrix(288,1);
-		private BlockRealMatrix measuredFrFlow = new BlockRealMatrix(288,1);
+		private double[][] measuredDensity = new double[289][1];
+		private double[][] measuredFlow = new double[289][1];
+		private double[][] measuredSpeed = new double[289][1];
+		private double[][] measuredOrFlow = new double[289][1];
+		private double[][] measuredFrFlow = new double[289][1];
 		// learning algorithm parameters
+		private boolean downBoundaryCongested = false;
 		// TODO: learning algo parameters		
 	
 	// getters and setters
@@ -45,16 +43,25 @@ public class ImputationCoreAlgorithm {
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, double simTimeStep){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary){
 		this.cellData = cells;
 		this.detectorList = detectors;
+		this.downBoundaryCongested = flwBoundary;
+		this.initializeDataMatrices();
+	}
+	
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, double simTimeStep){
+		this.cellData = cells;
+		this.detectorList = detectors;
+		this.downBoundaryCongested = flwBoundary;
 		this.simulationTimeStep = simTimeStep;
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, double simTimeStep, double demTimeStep){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, double simTimeStep, double demTimeStep){
 		this.cellData = cells;
 		this.detectorList = detectors;
+		this.downBoundaryCongested = flwBoundary;
 		this.simulationTimeStep = simTimeStep;
 		this.demandTimeStep = demTimeStep;
 		this.initializeDataMatrices();
@@ -70,6 +77,9 @@ public class ImputationCoreAlgorithm {
 		int i = 0;
 		for (Cell c: cellData){
 			
+			// Determine if the cell has separate HOV detection
+			boolean separateHOV = false;
+			if (c.getDetectorHOV() != null) separateHOV = true;
 			// Lengths
 			double dummyLength = 0;
 			for(Link l:c.getLinks()){
@@ -81,27 +91,41 @@ public class ImputationCoreAlgorithm {
 			lane.add(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV());
 			
 			// Speed Measurements
-			RealVector tempSPD_ML = (RealVector) c.getDetectorML().getSpeedData();
-			RealVector tempSPD_HOV = (RealVector) c.getDetectorHOV().getSpeedData();
-			tempSPD_ML.mapMultiplyToSelf(c.getLinks().getFirst().getLanesML());
-			tempSPD_HOV.mapMultiplyToSelf(c.getLinks().getFirst().getLanesHOV());
-			RealVector tempSPD = tempSPD_ML.add(tempSPD_HOV);
-			measuredSpeed.setColumnVector(i, tempSPD.mapDivideToSelf(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
+			if (separateHOV){
+				double[] tempSPD_ML = c.getDetectorML().getSpeedDataArray();
+				double[] tempSPD_HOV = c.getDetectorHOV().getSpeedDataArray();
+				tempSPD_ML = MyUtilities.scaleVector(tempSPD_ML,c.getLinks().getFirst().getLanesML());
+				tempSPD_HOV = MyUtilities.scaleVector(tempSPD_HOV,c.getLinks().getFirst().getLanesHOV());
+				double[] tempSPD = MyUtilities.addVectors(tempSPD_ML, tempSPD_HOV);
+				tempSPD = MyUtilities.scaleVector(tempSPD, 1/(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
+				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, tempSPD, i+1);
+			} else {
+				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, c.getDetectorML().getSpeedDataArray(), i+1);
+			}
 			
 			// Density Measurements
-			RealVector tempDTY_ML = (RealVector) c.getDetectorML().getDensityData();
-			RealVector tempDTY_HOV = (RealVector) c.getDetectorHOV().getDensityData();
-			RealVector tempDTY = tempDTY_ML.add(tempDTY_HOV);
-			measuredDensity.setColumnVector(i, tempDTY.mapMultiplyToSelf(dummyLength));
+			if (separateHOV){
+				double[] tempDTY_ML = c.getDetectorML().getDensityDataArray();
+				double[] tempDTY_HOV = c.getDetectorHOV().getDensityDataArray();
+				double[] tempDTY = MyUtilities.addVectors(tempDTY_ML,tempDTY_HOV);
+				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(tempDTY,dummyLength*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV())), i+1);
+			} else {
+				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(c.getDetectorML().getDensityDataArray(),dummyLength*c.getLinks().getFirst().getLanesML()), i+1);
+			}
 			
 			// Flow Measurements
-			RealVector tempFLW_ML = (RealVector) c.getDetectorML().getFlowData();
-			RealVector tempFLW_HOV = (RealVector) c.getDetectorHOV().getFlowData();
-			RealVector tempFLW = tempFLW_ML.add(tempFLW_HOV);
-			measuredFlow.setColumnVector(i, tempFLW.mapMultiplyToSelf(this.simulationTimeStep));
+			if (separateHOV){
+				double[] tempFLW_ML = c.getDetectorML().getFlowDataArray();
+				double[] tempFLW_HOV = c.getDetectorHOV().getFlowDataArray();
+				double[] tempFLW = MyUtilities.addVectors(tempFLW_ML,tempFLW_HOV);
+				tempFLW = MyUtilities.scaleVector(tempFLW,this.simulationTimeStep*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
+				measuredFlow = MyUtilities.assignColumn(measuredFlow, tempFLW, i+1);
+			} else {
+				measuredFlow = MyUtilities.assignColumn(measuredFlow, MyUtilities.scaleVector(c.getDetectorML().getFlowDataArray(),this.simulationTimeStep*c.getLinks().getFirst().getLanesML()), i+1);
+			}
 			
 			// Fundamental Diagram Parameters
-			if (c.getDetectorHOV().getSensorID() != 0) { // case where HOV lane detection is separate
+			if (separateHOV) { // case where HOV lane detection is separate
 				
 				// Mainline
 				double rhocrit_ML = c.getDetectorML().getFdParams().getRho_crit()*dummyLength;
@@ -129,17 +153,11 @@ public class ImputationCoreAlgorithm {
 			}
 			
 			// Known Ramp Flows
-			RealVector dummyVector = c.getMeasuredOnrampFlow().getColumnVector(0);
-			for (int j = 1; j<c.getLinks().size();j++){
-				dummyVector = dummyVector.add(c.getMeasuredOnrampFlow().getColumnVector(j));
-			}
-			measuredOrFlow.setColumnVector(i, dummyVector);
+			double[] dummyVector = MyUtilities.sumColumns(c.getMeasuredOnrampFlow());
+			measuredOrFlow = MyUtilities.assignColumn(measuredOrFlow, dummyVector, i+1);
 			
-			RealVector dummyVector2 = c.getMeasuredOfframpFlow().getColumnVector(0);
-			for (int j = 1; j<c.getLinks().size();j++){
-				dummyVector2 = dummyVector2.add(c.getMeasuredOfframpFlow().getColumnVector(j));
-			}
-			measuredFrFlow.setColumnVector(i, dummyVector2);
+			double[] dummyVector2 = MyUtilities.sumColumns(c.getMeasuredOfframpFlow());
+			measuredFrFlow = MyUtilities.assignColumn(measuredFrFlow, dummyVector2, i+1);
 			
 			// Ramps present and need imputation boolean vectors
 			boolean dummy = false;
@@ -172,42 +190,81 @@ public class ImputationCoreAlgorithm {
 			int val2 = dummy4? 1 : 0;
 			maxBeta.add(val2*0.9); // Hard-coded maximum beta
 			
+			i++;
 		}
 		
-		measuredSpeed = this.interpolate((int) (24/simulationTimeStep), measuredSpeed);
-		measuredFlow = this.interpolate((int) (24/simulationTimeStep), measuredFlow);
-		measuredDensity = this.interpolate((int) (24/simulationTimeStep), measuredDensity);
-		measuredOrFlow = this.interpolate((int) (24/simulationTimeStep), measuredOrFlow);
-		measuredFrFlow = this.interpolate((int) (24/simulationTimeStep), measuredFrFlow);
+		measuredSpeed = MyUtilities.interpolateMatrix(measuredSpeed, (int) (24/this.simulationTimeStep));
+		measuredFlow = MyUtilities.interpolateMatrix(measuredFlow, (int) (24/this.simulationTimeStep));
+		measuredDensity = MyUtilities.interpolateMatrix(measuredDensity,(int) (24/this.simulationTimeStep));
+		measuredOrFlow = MyUtilities.interpolateMatrix(measuredOrFlow,(int) (24/this.simulationTimeStep));
+		measuredFrFlow = MyUtilities.interpolateMatrix(measuredFrFlow,(int) (24/this.simulationTimeStep));
 		
+		// variables needed for the downstream boundary congested case (line 126 of matlab code)
+		double[] boundaryVelocity = MyUtilities.fetchColumn(measuredSpeed, measuredSpeed[0].length);
+		double boundaryVF = this.vf.get(this.vf.size()-1)*this.linkLength.get(this.linkLength.size()-1)/this.simulationTimeStep; 
 		
+		// additional post-processing of variables (line 165 of matlab code)
+		double[] orFLW_save = MyUtilities.fetchColumn(measuredOrFlow, 1);
+		double[] inputFLW = MyUtilities.addVectors(MyUtilities.fetchColumn(measuredFlow, 1),orFLW_save);
+		// skipped the assignment in line 169 of matlab
 		
+		// n'th cell offramp is paired with the n+1'th cell onramp at the node level. the following manipulations are made to take this into account
+		imputeOR.remove(0);
+		imputeFR.remove(imputeFR.size()-1);
+		orPresent.remove(0);
+		frPresent.remove(frPresent.size()-1);
 		
-	}
-	
-	private BlockRealMatrix interpolate(int newsize, BlockRealMatrix matrix){
-		// allocate new matrix with new size
-		BlockRealMatrix resultMatrix = new BlockRealMatrix(newsize,cellData.size());
-		// create array of interpolation points
-		double[] interpolationPoints = new double[newsize];
-		for (int k=0;k<interpolationPoints.length;k++){
-			interpolationPoints[k] = k;
+		double[][] OrFlow = MyUtilities.removeColumn(measuredOrFlow, 1);
+		double[][] FrFlow = MyUtilities.removeColumn(measuredFrFlow, measuredFrFlow[0].length);
+		
+		double[][] orFlow_Giv = measuredOrFlow; // probably superfluous but keeping up with the matlab code for now
+		double[][] frFlow_Giv = measuredFrFlow; // probably superfluous but keeping up with the matlab code for now
+		
+		ArrayList<Boolean> impute = new ArrayList<Boolean>();
+		for (int j=0;i<imputeOR.size();j++){
+			impute.add(imputeOR.get(j)|imputeFR.get(j));
 		}
-		// interpolate and assing to output
-		LinearInterpolator interliPolat = new LinearInterpolator();
-		for (int k=0;k<matrix.getColumnDimension();k++){
-			resultMatrix.setColumnVector(k, (RealVector) interliPolat.interpolate(interpolationPoints, matrix.getColumn(k)));
-		}		
-		return resultMatrix;
+		
+		int numberOfNodes = measuredDensity[0].length + 1;
+		
+		double[][] BETA = new double[FrFlow.length][FrFlow[0].length];
+		double[][] dj = new double[FrFlow.length][FrFlow[0].length];
+		double[] zeroVector = new double[FrFlow.length];
+		Arrays.fill(zeroVector, 0);
+		BETA = MyUtilities.appendColumn(BETA, zeroVector);
+		dj = MyUtilities.appendColumn(dj, zeroVector);
+		double[][] OrInp = new double[dj.length][dj[0].length];
+		double[] dprev = new double[numberOfNodes-2];
+		Arrays.fill(dprev, 0);
+		double[][] ErrA = new double[BETA.length][BETA[0].length];
+		double[][] ErrB = new double[BETA.length][BETA[0].length];
+		
+		// skipped line 198 for now
+		
+		// *********************************************************************************************
+		// Derive dj and BETA from known ramp flows ****************************************************
+		// *********************************************************************************************
+		
+		
+		
+		
+		
+			
 	}
 	
 	private void initializeDataMatrices(){
 		
-		measuredDensity = new BlockRealMatrix(detectorList.values().iterator().next().getDensityData().size(),cellData.size());
-		measuredFlow = new BlockRealMatrix(detectorList.values().iterator().next().getDensityData().size(),cellData.size());
-		measuredSpeed = new BlockRealMatrix(detectorList.values().iterator().next().getDensityData().size(),cellData.size());
-		measuredOrFlow = new BlockRealMatrix(detectorList.values().iterator().next().getDensityData().size(),cellData.size());
-		measuredFrFlow = new BlockRealMatrix(detectorList.values().iterator().next().getDensityData().size(),cellData.size());
+		measuredDensity = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredSpeed = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredOrFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredFrFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		
+//		Arrays.fill(measuredDensity, 0);
+//		Arrays.fill(measuredFlow, 0);
+//		Arrays.fill(measuredSpeed, 0);
+//		Arrays.fill(measuredOrFlow, 0);
+//		Arrays.fill(measuredFrFlow, 0);
 		
 	}
 

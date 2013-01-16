@@ -7,7 +7,6 @@ import javax.xml.*;
 import javax.xml.bind.*;
 import javax.xml.validation.SchemaFactory;
 
-import org.apache.commons.math.linear.RealVector;
 import org.joda.time.Interval;
 
 import core.DatabaseException;
@@ -204,6 +203,8 @@ public class Imputer {
 			for(int key: detectors.keySet()){
 				if (detectors.get(key).getLinkAssoc() == l.getLinkID()){
 					hasDetector = true;
+					// Detector dummyDetector = detectors.get(key);
+					// if (dummyDetector.getSensorType().toString().equals(arg0) //REVISIT
 					detectorML = detectors.get(key);
 				}
 			}
@@ -367,7 +368,7 @@ public class Imputer {
 		while (i < mainlineLinks.size()-1){
 			
 			if (mainlineLinks.get(i).isHasDetector() & mainlineLinks.get(i).getDetectorML().getHealthStatus() == 100){
-				Cell c = new Cell((int) totalTimeInHours*60/5);
+				Cell c = new Cell((int) totalTimeInHours*60/5+1);
 				c.addLink(mainlineLinks.get(i));
 				c.setDetectorML(mainlineLinks.get(i).getDetectorML());
 				c.setDetectorHOV(mainlineLinks.get(i).getDetectorHOV());
@@ -385,8 +386,9 @@ public class Imputer {
 						if (links.get(linkID).getLinkType().equals("onramp")){
 							if (links.get(linkID).getDetectorML().getFlowData().isEmpty() | links.get(linkID).getDetectorML().getHealthStatus() != 100){
 								c.addToImputeOR(true);
+								c.appendZeroColumnToMeasuredOnrampFlow();
 							} else {
-								c.addColumnToMeasuredOnrampFlow((RealVector) links.get(linkID).getDetectorML().getFlowData());
+								c.appendColumnToMeasuredOnrampFlow(links.get(linkID).getDetectorML().getFlowDataArray());
 								c.addToImputeOR(false);
 							}
 						}
@@ -395,8 +397,9 @@ public class Imputer {
 						if (links.get(linkID).getLinkType().equals("offramp")){
 							if (links.get(linkID).getDetectorML().getFlowData().isEmpty() | links.get(linkID).getDetectorML().getHealthStatus() != 100){
 								c.addToImputeFR(true);
+								c.appendZeroColumnToMeasuredOfframpFlow();
 							} else {
-								c.addColumnToMeasuredOfframpFlow((RealVector) links.get(linkID).getDetectorML().getFlowData());
+								c.appendColumnToMeasuredOfframpFlow(links.get(linkID).getDetectorML().getFlowDataArray());
 								c.addToImputeFR(false);
 							}
 						}

@@ -93,7 +93,7 @@ public class Detector {
 	}
 		public double[] getSpeedDataArray() {
 			Double[] d = speedData.toArray(new Double[speedData.size()]);
-			double[] dd = null;
+			double[] dd = new double[d.length];
 			for(int i=0;i<d.length;i++){  
 				 dd[i] = d[i].doubleValue();  
 			}  
@@ -107,7 +107,7 @@ public class Detector {
 	}
 		public double[] getDensityDataArray() {
 			Double[] d = densityData.toArray(new Double[densityData.size()]);
-			double[] dd = null;
+			double[] dd = new double[d.length];
 			for(int i=0;i<d.length;i++){  
 				 dd[i] = d[i].doubleValue();  
 			}  
@@ -121,7 +121,7 @@ public class Detector {
 	}
 		public double[] getFlowDataArray() {
 			Double[] d = flowData.toArray(new Double[flowData.size()]);
-			double[] dd = null;
+			double[] dd = new double[d.length];
 			for(int i=0;i<d.length;i++){  
 				 dd[i] = d[i].doubleValue();  
 			}  

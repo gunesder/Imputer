@@ -1,11 +1,8 @@
 package edu.berkeley.path.imputer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
-
-import org.apache.commons.math.linear.BlockRealMatrix;
-import org.apache.commons.math.linear.RealVector;
-import org.joda.time.Interval;
 
 public class Cell {
 	
@@ -26,8 +23,8 @@ public class Cell {
 	private ArrayList<Double> offRampFlow = new ArrayList<Double>();
 	private ArrayList<Double> beta = new ArrayList<Double>();
 	private ArrayList<Double> onRampInput = new ArrayList<Double>();
-	private BlockRealMatrix measuredOnrampFlow = new BlockRealMatrix(288,1); // static pre-allocation, might fix later
-	private BlockRealMatrix measuredOfframpFlow = new BlockRealMatrix(288,1); // static pre-allocation, might fix later
+	private double[][] measuredOnrampFlow = new double[289][1]; 
+	private double[][] measuredOfframpFlow = new double[289][1]; 
 	private ArrayList<Double> Velocity = new ArrayList<Double>();
 	private ArrayList<Double> Demand = new ArrayList<Double>();
 	private ArrayList<Integer> onrampsPerLink = new ArrayList<Integer>();
@@ -37,17 +34,23 @@ public class Cell {
 	public LinkedList<Link> getLinks() {
 		return links;
 	}
-	public BlockRealMatrix getMeasuredOnrampFlow() {
+	public double[][] getMeasuredOnrampFlow() {
 		return measuredOnrampFlow;
 	}
-	public void setMeasuredOnrampFlow(BlockRealMatrix measuredOnrampFlow) {
+	public void setMeasuredOnrampFlow(double[][] measuredOnrampFlow) {
 		this.measuredOnrampFlow = measuredOnrampFlow;
 	}
-	public BlockRealMatrix getMeasuredOfframpFlow() {
+	public double[][] getMeasuredOfframpFlow() {
 		return measuredOfframpFlow;
 	}
-	public void setMeasuredOfframpFlow(BlockRealMatrix measuredOfframpFlow) {
+	public void setMeasuredOfframpFlow(double[][] measuredOfframpFlow) {
 		this.measuredOfframpFlow = measuredOfframpFlow;
+	}
+	public ArrayList<Boolean> getImputeOR() {
+		return imputeOR;
+	}
+	public ArrayList<Boolean> getImputeFR() {
+		return imputeFR;
 	}
 	public ArrayList<Integer> getOnrampsPerLink() {
 		return onrampsPerLink;
@@ -154,18 +157,6 @@ public class Cell {
 	public void setOnRampInput(ArrayList<Double> onRampInput) {
 		this.onRampInput = onRampInput;
 	}	
-	public BlockRealMatrix getmeasuredOnrampFlow() {
-		return measuredOnrampFlow;
-	}
-	public void setmeasuredOnrampFlow(BlockRealMatrix measuredOnrampFlow) {
-		this.measuredOnrampFlow = measuredOnrampFlow;
-	}
-	public BlockRealMatrix getmeasuredOfframpFlow() {
-		return measuredOfframpFlow;
-	}
-	public void setmeasuredOfframpFlow(BlockRealMatrix measuredOfframpFlow) {
-		this.measuredOfframpFlow = measuredOfframpFlow;
-	}
 	public ArrayList<Double> getVelocity() {
 		return Velocity;
 	}
@@ -182,8 +173,8 @@ public class Cell {
 	// constructors
 	
 	public Cell(int datasize){
-		measuredOnrampFlow = new BlockRealMatrix(datasize,1);
-		measuredOfframpFlow = new BlockRealMatrix(datasize,1);
+		measuredOnrampFlow = new double[datasize][1];
+		measuredOfframpFlow = new double[datasize][1];
 	}
 	
 	// methods
@@ -207,32 +198,23 @@ public class Cell {
 		this.imputeFR.add(b);
 	}
 	
-	public void addColumnToMeasuredOnrampFlow (RealVector v){
-		if (this.measuredOnrampFlow.getColumnDimension() == 1){
-			this.measuredOnrampFlow.setColumnVector(0, v);
-		} else {
-			int newColumnDimension = this.measuredOnrampFlow.getColumnDimension() + 1;
-			BlockRealMatrix dummy = new BlockRealMatrix(links.getFirst().getDetectorML().getDensityData().size(),newColumnDimension);
-			for (int i = 0;i<newColumnDimension - 1;i++){
-				dummy.setColumn(i,this.measuredOnrampFlow.getColumn(i));
-			}
-			dummy.setColumnVector(dummy.getColumnDimension(), v);
-			this.measuredOnrampFlow = dummy;
-		}
+	public void appendColumnToMeasuredOnrampFlow (double[] v){
+		MyUtilities.appendColumn(this.measuredOnrampFlow, v);
 	}
 	
-	public void addColumnToMeasuredOfframpFlow (RealVector v){
-		if (this.measuredOnrampFlow.getColumnDimension() == 1){
-			this.measuredOnrampFlow.setColumnVector(0, v);
-		} else {
-			int newColumnDimension = this.measuredOfframpFlow.getColumnDimension() + 1;
-			BlockRealMatrix dummy = new BlockRealMatrix(links.getFirst().getDetectorML().getDensityData().size(),newColumnDimension);
-			for (int i = 0;i<newColumnDimension - 1;i++){
-				dummy.setColumn(i,this.measuredOfframpFlow.getColumn(i));
-			}
-			dummy.setColumnVector(dummy.getColumnDimension(), v);
-			this.measuredOfframpFlow = dummy;
-		}
+	public void appendColumnToMeasuredOfframpFlow (double[] v){
+		MyUtilities.appendColumn(this.measuredOfframpFlow, v);
+	}
+	public void appendZeroColumnToMeasuredOnrampFlow() {
+		double[] v = new double[this.measuredOnrampFlow.length];
+		Arrays.fill(v, 0);
+		MyUtilities.appendColumn(this.measuredOnrampFlow, v);
+		
+	}
+	public void appendZeroColumnToMeasuredOfframpFlow() {
+		double[] v = new double[this.measuredOfframpFlow.length];
+		Arrays.fill(v, 0);
+		MyUtilities.appendColumn(this.measuredOfframpFlow, v);		
 	}
 	
 }
