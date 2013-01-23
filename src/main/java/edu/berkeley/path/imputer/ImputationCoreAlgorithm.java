@@ -2,6 +2,9 @@ package edu.berkeley.path.imputer;
 
 import java.util.*;
 
+import lpsolve.LpSolve;
+import lpsolve.LpSolveException;
+
 public class ImputationCoreAlgorithm {
 	
 	// fields
@@ -10,6 +13,7 @@ public class ImputationCoreAlgorithm {
 		private HashMap<Integer,Detector> detectorList = new HashMap<Integer,Detector>();
 		private double demandTimeStep = 5.0/60.0; // [hours] 5 minute default
 		private double simulationTimeStep = 5.0/60.0/60.0; // [hours] 5 second default
+		private boolean downBoundaryCongested = false;
 		// derived fields (vector quantities)
 		private ArrayList<Double> linkLength = new ArrayList<Double>();
 		private ArrayList<Integer> lane = new ArrayList<Integer>();
@@ -28,10 +32,8 @@ public class ImputationCoreAlgorithm {
 		private double[][] measuredFlow = new double[289][1];
 		private double[][] measuredSpeed = new double[289][1];
 		private double[][] measuredOrFlow = new double[289][1];
-		private double[][] measuredFrFlow = new double[289][1];
+		private double[][] measuredFrFlow = new double[289][1];		
 		// learning algorithm parameters
-		private boolean downBoundaryCongested = false;
-		// TODO: learning algo parameters		
 	
 	// getters and setters
 		// TODO: generate getters and setters
@@ -221,7 +223,7 @@ public class ImputationCoreAlgorithm {
 		double[][] frFlow_Giv = measuredFrFlow; // probably superfluous but keeping up with the matlab code for now
 		
 		ArrayList<Boolean> impute = new ArrayList<Boolean>();
-		for (int j=0;i<imputeOR.size();j++){
+		for (int j=0;j<imputeOR.size();j++){
 			impute.add(imputeOR.get(j)|imputeFR.get(j));
 		}
 		
@@ -233,7 +235,7 @@ public class ImputationCoreAlgorithm {
 		Arrays.fill(zeroVector, 0);
 		BETA = MyUtilities.appendColumn(BETA, zeroVector);
 		dj = MyUtilities.appendColumn(dj, zeroVector);
-		double[][] OrInp = new double[dj.length][dj[0].length];
+		double[][] OrINP = new double[dj.length][dj[0].length];
 		double[] dprev = new double[numberOfNodes-2];
 		Arrays.fill(dprev, 0);
 		double[][] ErrA = new double[BETA.length][BETA[0].length];
@@ -242,8 +244,283 @@ public class ImputationCoreAlgorithm {
 		// skipped line 198 for now
 		
 		// *********************************************************************************************
-		// Derive dj and BETA from known ramp flows ****************************************************
+		// ************** Derive dj and BETA from known ramp flows *************************************
 		// *********************************************************************************************
+		
+		double[] STime = MyUtilities.createIncrementVector(0, 24-this.simulationTimeStep, this.simulationTimeStep);
+		for (int ii=1;ii<STime.length;ii++){
+			
+			for (int j=0;j<numberOfNodes-2;j++){
+				
+				if (!impute.get(j)){
+					
+					 double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - measuredDensity[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
+					 double Term2 = this.qmax.get(j) < measuredDensity[ii][j]*this.vf.get(j) ? this.qmax.get(j) : measuredDensity[ii][j]*this.vf.get(j);
+					 
+					 double r = OrFlow[ii][j];
+					 double s = FrFlow[ii][j] < Term2 ? FrFlow[ii][j] : Term2;
+					 
+					 if (Term2+r-s>Term1){
+						 
+						 double a1 = Term1 - r;
+						 double a2 = Term2*r;
+						 double c1 = a2;
+						 double b1 = -s;
+						 double b2 = Term2*(Term1+s);
+						 double c2 = s*Term2;
+						 int[] colno = new int[4];
+				         double[] row = new double[4];
+						 					 
+						 try {
+							 
+							LpSolve solver = LpSolve.makeLp(0, 4); // 0 constraints, 4 variables to start with
+							solver.strSetObjFn("1 1 0 0"); // cost is the sum of the first two variables
+							
+							solver.setAddRowmode(true);  /* makes building the model faster if it is done rows by row */
+
+				            /* construct first row (-x1 + a1x3 +a2x4 <= c1) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = -1;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = 0;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = a1;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = a2;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, c1);
+				            
+				            /* construct second row (-x1 - a1x3 - a2x4 <= -c1) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = -1;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = 0;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = -a1;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = -a2;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, -c1);
+				            
+				            /* construct third row (-x2 + b1x3 + b2x4 <= c2) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = 0;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = -1;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = b1;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = b2;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, c2);
+				            
+				            /* construct fourth row (-x2 - b1x3 - b2x4 <= -c2) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = 0;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = -1;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = -b1;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = -b2;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, -c2);
+				            
+				            /* construct fifth row (x4 <= 1) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = 0;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = 0;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = 0;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = 1;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, 1);
+				            
+				            /* construct sixth row (-x3 <= -max(r,dprev)) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = 0;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = 0;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = -1;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = 0;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, (r > dprev[j] ? r : dprev[j]));
+				            
+				            /* construct seventh row (-x4 <= 0) */
+				            j = 0;
+
+				            colno[j] = 1; /* first column */
+				            row[j++] = 0;
+
+				            colno[j] = 2; /* second column */
+				            row[j++] = 0;
+				            
+				            colno[j] = 3; /* third column */
+				            row[j++] = 0;
+
+				            colno[j] = 4; /* fourth column */
+				            row[j++] = -1;
+
+				            /* add the row to lpsolve */
+				            solver.addConstraintex(j, row, colno, LpSolve.LE, 0);
+				            
+				            solver.setAddRowmode(false); /* rowmode should be turned off again when done building the model */
+				            
+				            /* Now let lpsolve calculate a solution */
+				            int ret = solver.solve();
+				            double[] optVariables = new double[4];
+				            solver.getVariables(optVariables);
+				            
+				            /* Assign optimal variables to corresponding local variables */
+				            dj[ii][j] = optVariables[2];
+				            BETA[ii][j] = optVariables[3];
+				            ErrA[ii][j] = optVariables[0];
+				            ErrB[ii][j] = optVariables[1];
+				            OrINP[ii][j] = dj[ii][j] - dprev[j];
+				            dprev[j] = dj[ii][j] - dj[ii][j]*Term1/(Term2*(1-optVariables[3])+dj[ii][j]);
+							
+						} catch (LpSolveException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						 
+					 } else {
+						dj[ii][j] = r;
+						dprev[j] = 0;
+						OrINP[ii][j] = dj[ii][j] - dprev[j];
+						BETA[ii][j] = s/(0.0000000001 > Term2 ? 0.0000000001 : Term2);
+					 }
+					 
+				}
+			}
+		}
+		
+		double[][] Demand = dj; 
+		
+		// *********************************************************************************************
+		// ************** Check that ramps are present whenever imputation is enabled ******************
+		// *********************************************************************************************
+		
+		double[] lowerBounds = new double[numberOfNodes-2];
+		double[] upperBounds = new double[numberOfNodes-2];
+		for (int ind = 0;ind < numberOfNodes - 2; ind++){
+			if (frPresent.get(ind)) lowerBounds[ind] = 0; else lowerBounds[ind] = 1;
+			if (orPresent.get(ind)) upperBounds[ind] = 0; else upperBounds[ind] = 1;
+			if (!frPresent.get(ind) & !orPresent.get(ind) & impute.get(ind)){
+				
+			}			
+		}
+		if (downBoundaryCongested){
+			lowerBounds[numberOfNodes-2] = 1;
+			upperBounds[numberOfNodes-2] = 0;
+		}
+		
+		// *********************************************************************************************
+		// ************************* Learning Algorithm ************************************************
+		// *********************************************************************************************
+		
+		/* Learning algorithm front matter, gains, user-defined settings, etc. (hard coded for now) */
+		double GM = 40; // these are user-defined gains for the adaptive learning algorithm and are not necessarily all very sensitive
+		double G1 = 1*GM;
+		double G2 = 0.0001*GM;
+		double percTol = 0.001;
+		double percTol2 = 0.2;
+		int maxLim = 100;
+		int iterMax = 25;
+		int[] iterTrigger = {5,9,12,16,20}; // iteration indices when the trigger algorithm kicks in
+		double derivativeBound = 2;
+		double startBound = 1;
+		
+		// initialize c: this is the effective demand vector into each cell
+		double[][] c = new double[STime.length][cellData.size()-1];
+		double[] dummy = new double[measuredDensity.length];
+		for (int j=1;j<numberOfNodes-1;j++){
+			dummy = MyUtilities.scaleVector(MyUtilities.onesVector(measuredDensity.length), rhojam.get(j));
+			dummy = MyUtilities.addVectors(dummy,MyUtilities.scaleVector(MyUtilities.fetchColumn(measuredDensity, j),-1));
+			c = MyUtilities.assignColumn(c, MyUtilities.scaleVector(dummy, 1.5*w.get(j)), j);
+		}
+		
+		if (downBoundaryCongested){
+			MyUtilities.assignColumn(c, MyUtilities.scaleVector(MyUtilities.onesVector(c.length), qmax.get(numberOfNodes-1)), numberOfNodes-1);
+			impute.set(numberOfNodes, true);
+		}
+		
+		double[][] cBest = c;
+		int iterBound_D_Beta = iterMax+1;
+		int startIterBound = 10;
+		
+		boolean[] flags = new boolean[numberOfNodes];
+		
+		// Learning Algorithm Loop
+		for (int iter = 1;iter <= iterMax;iter++){
+			
+			flags[0] = true;
+			
+			double[][] mode = MyUtilities.zerosMatrix(c.length, c[0].length-1);
+			
+			double InQ = 0;
+			double[][] Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
+			Nh = MyUtilities.assignRow(Nh, measuredDensity[0], 0);
+			double[] cj = c[0];
+			
+			for (int k=0;k<STime.length-1;k++){
+				
+				double[] Limit = new double[cellData.size()];
+				for (int j=0;j<Limit.length;j++){
+					Limit[j] = qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j]);
+				}
+				
+				double[] cjprev = cj;
+				cj = c[k];
+				// line 333
+				
+			}
+			
+			
+			
+		}
+		
+		
 		
 		
 		

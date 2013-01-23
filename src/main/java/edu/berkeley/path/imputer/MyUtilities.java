@@ -3,6 +3,9 @@ package edu.berkeley.path.imputer;
 import org.apache.commons.math.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math.analysis.polynomials.PolynomialSplineFunction;
+
+import scala.actors.threadpool.Arrays;
+
 import java.lang.*;
 
 public class MyUtilities {
@@ -176,5 +179,31 @@ public class MyUtilities {
 		}
 		return matrixOut;
 	}
+	
+	// TODO: Write tests for the methods below this
+	// create vector of ones
+	public static double[] onesVector(int size){
+		double[] out = new double[size];
+		Arrays.fill(out, 1);
+		return out;
+	}
+	
+	// create matrix of zeros
+	public static double[][] zerosMatrix(int size1,int size2){
+		double[][] out = new double[size1][size2];
+		for(int i = 0; i < out.length; i++) {
+		    Arrays.fill(out[i], 0);
+		}
+		return out;
+	}
+	
+	public static double[][] assignRow(double[][] matrix, double[] v, int index){
+		for (int i=0;i<matrix[index].length;i++){
+			matrix[index][i] = v[i];
+		}
+		return matrix;
+	}
+	
+	
 
 }
