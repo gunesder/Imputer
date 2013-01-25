@@ -197,11 +197,28 @@ public class MyUtilities {
 		return out;
 	}
 	
+	// assign vector to a given row of a matrix
 	public static double[][] assignRow(double[][] matrix, double[] v, int index){
 		for (int i=0;i<matrix[index].length;i++){
 			matrix[index][i] = v[i];
 		}
 		return matrix;
+	}
+	
+    // element-wise subtraction of two vectors
+	public static double[] subtractVectors(double[] v1, double[] v2) {
+		if (v1.length != v2.length){
+			throw new ArithmeticException();
+		}
+		double[] out = new double[v1.length];
+		
+		for(int i = 0;i<v1.length;i++){
+			
+			out[i] = v1[i] - v2[i];
+			
+		}
+		
+		return out;
 	}
 	
 	

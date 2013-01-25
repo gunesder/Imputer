@@ -503,7 +503,7 @@ public class ImputationCoreAlgorithm {
 			Nh = MyUtilities.assignRow(Nh, measuredDensity[0], 0);
 			double[] cj = c[0];
 			
-			for (int k=0;k<STime.length-1;k++){
+			for (int k=0;k<STime.length-1;k++){ // starts at line 328 and ends at line 584
 				
 				double[] Limit = new double[cellData.size()];
 				for (int j=0;j<Limit.length;j++){
@@ -512,13 +512,279 @@ public class ImputationCoreAlgorithm {
 				
 				double[] cjprev = cj;
 				cj = c[k];
-				// line 333
 				
-			}
+				/* This whole section does what line 333 does in Matlab, may need to make into a utility method if it is needed somewhere else*/
+				double[] dummy1 = MyUtilities.subtractVectors(cjprev,MyUtilities.scaleVector(MyUtilities.onesVector(cjprev.length), derivativeBound));
+				double[] dummy2 = MyUtilities.addVectors(cjprev, MyUtilities.scaleVector(MyUtilities.onesVector(cjprev.length), derivativeBound));
+				double[] dummy3 = new double[cj.length];
+				double[] dummy4 = new double[cj.length];
+				
+				for (i=0;i<cj.length;i++){
+					dummy3[i] = cj[i] < dummy2[i] ? cj[i] : dummy2[i];
+				}
+				
+				for (i=0;i<cj.length;i++){
+					dummy4[i] = dummy1[i] > dummy3[i] ? dummy1[i] : dummy3[i];
+				}
+				/* This whole section does what line 333 does in Matlab, may need to make into a utility method if it is needed somewhere else*/
+				
+				for (int j=0;j<numberOfNodes-2;j++){
+					
+					double NjVfj = qmax.get(j) < Nh[k][j]*vf.get(j) ? qmax.get(j) : Nh[k][j]*vf.get(j);
+					
+					if(!impute.get(j)){
+						cj[j] = NjVfj*(1-BETA[k][j]) + Demand[k][j];
+					} else {
+						if (iter>startIterBound){
+							if (lowerBounds[j] !=0){
+								cj[j] = cj[j] > NjVfj ? cj[j] : NjVfj;
+							}
+							if (upperBounds[j] != 0){
+								cj[j] = cj[j] < NjVfj ? cj[j] : NjVfj;
+							}
+						}
+					}
+				}
+				
+				for (int j=1;j<numberOfNodes-1;j++){
+					if (impute.get(j-1)){
+						flags[j] = cj[j-1]>=Limit[j]*(1-percTol);
+					} else {
+						flags[j] = cj[j-1]>=Limit[j];
+					}
+				}
+				flags[numberOfNodes-1] = false;
+				
+				InQ = InQ + inputFLW[k];
+				double inFlow = Limit[0] < InQ ? Limit[0] : InQ;
+				InQ = InQ - inFlow;
+				
+				boolean needBoundaryImpute = downBoundaryCongested & (boundaryVelocity[k]<boundaryVF*0.9);
+				if (needBoundaryImpute){
+					flags[numberOfNodes-1] = true;
+				}
+				
+				int j=0;
+				while (j<numberOfNodes-1){ // starts at line 374 and ends at line 580
+					j = j+1;
+					double NjVfj = Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j);
+					double Njm1Vfjm1 = 0; // never used, just a workaround. It is assigned a new value for each node except for the first one, which doesn't undergo imputation anyway
+					if (j>1){
+						Njm1Vfjm1 = qmax.get(j-1) < Nh[k][j-1]*vf.get(j-1) ? qmax.get(j-1) : Nh[k][j-1]*vf.get(j-1);	
+					}
+					double Wj = qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j]);
+					double Wjp1 = 0;
+					if (j == numberOfNodes-1){
+						Wjp1 = qmax.get(j);
+					} else {
+						Wjp1 = qmax.get(j+1) < w.get(j+1)*(rhojam.get(j+1)-Nh[k][j+1]) ? qmax.get(j+1) : w.get(j+1)*(rhojam.get(j+1)-Nh[k][j+1]);
+					}
+					
+					if (!flags[j] && !flags[j+1]){ // starts at line 391 and ends at line 577
+						mode[k][j] = 1;
+						
+						double BoundL = lowerBounds[j-1];
+						double BoundU = upperBounds[j-1];
+						
+						double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]-NjVfj+cj[j-1]);
+						double NHt = Nh0/(1+G1);
+						
+						if (impute.get(j-1)) { // Line 402 to 424
+							
+							cj[j-1] = cj[j-1] + G1*NHt;
+							
+							double UBound = 0;
+							double LBound = 0;
+							if (iter > iterBound_D_Beta){
+								UBound = Wj < Njm1Vfjm1 + maxD.get(j-1) ? Wj : Njm1Vfjm1 + maxD.get(j-1);
+								LBound = 0.01 > (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1))) ? 0.01 : (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1)));
+							} else {
+								UBound = Wj;
+								LBound = 0.01;
+							}
+							
+							if (BoundU == 1){
+								UBound = UBound < Njm1Vfjm1 ? UBound : Njm1Vfjm1;
+							} else if (BoundL == 1){
+								LBound = LBound > Njm1Vfjm1 ? LBound : Njm1Vfjm1;
+							}
+							
+							if (k>startBound){
+								LBound = LBound > cjprev[j-1]-derivativeBound ? LBound : cjprev[j-1]-derivativeBound;
+								UBound = UBound < cjprev[j-1]+derivativeBound ? UBound : cjprev[j-1]+derivativeBound;
+							}
+							
+							cj[j-1] = (cj[j-1] < UBound ? cj[j-1] : UBound) > LBound ? (cj[j-1] < UBound ? cj[j-1] : UBound) : LBound;
+							
+						}
+						
+						Nh[k+1][j] = Nh[k][j] - NjVfj + cj[j-1];
+						NHt = measuredDensity[k+1][j] - Nh[k+1][j];
+						
+					} else if (!flags[j] & flags[j+1]){
+						mode[k][j] = 2;
+						
+						if (impute.get(j) & cj[j] > Wjp1*(1+percTol) & cj[j] < Wjp1*(1+percTol) & (Nh[k][j]+cj[j-1]-NjVfj)>measuredDensity[k+1][j]){
+							cj[j] = cj[j] < Wjp1*(1-percTol/100) ? cj[j] : Wjp1*(1-percTol/100);
+							flags[j+1] = false;
+							j = j-1;
+							continue;							
+						}
+						
+						cj[j] = cj[j] > Wjp1 ? cj[j] : Wjp1;
+						
+						double BoundL1 = lowerBounds[j-1];
+						double BoundU1 = upperBounds[j-1];
+						double BoundL2 = lowerBounds[j];
+						double BoundU2 = upperBounds[j];
+						
+						double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+cj[j-1]-Wjp1*NjVfj/cj[j]);
+						double NHt = Nh0 / (1+G1*(impute.get(j-1) ? 1 : 0)+G2*Wjp1*NjVfj*(impute.get(j) ? 1 : 0));
+						
+						if (impute.get(j)){
+							cj[j] = 1 / (1/cj[j]-(G2*NHt < 1/cj[j]*0.99 ? G2*NHt : 1/cj[j]*0.99));
+							
+							double UBound2 = 0;
+							if (BoundU2 != 0){
+								UBound2 =  (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) > 0.01 ? (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) : 0.01;
+							} else if (iter > iterBound_D_Beta){
+								UBound2 = maxLim*Wjp1 < (Wjp1 > NjVfj+maxD.get(j) ? Wjp1 : NjVfj+maxD.get(j)) ? maxLim*Wjp1 : (Wjp1 > NjVfj+maxD.get(j) ? Wjp1 : NjVfj+maxD.get(j));
+							} else {
+								UBound2 = maxLim*Wjp1;
+							}
+							
+							double LBound2 = NjVfj*BoundL2 > Wjp1 ? NjVfj*BoundL2 : Wjp1;
+							
+							if (iter > iterBound_D_Beta){
+								LBound2 = LBound2 > NjVfj*(1-maxBeta.get(j)) ? LBound2 : NjVfj*(1-maxBeta.get(j));
+							} else {
+								LBound2 = LBound2 > 0.01 ? LBound2 : 0.01; 
+							}
+							
+							if (k > startBound){
+								LBound2 = LBound2 > cjprev[j]-derivativeBound ? LBound2 : cjprev[j]-derivativeBound;
+								UBound2 = UBound2 < cjprev[j]+derivativeBound ? UBound2 : cjprev[j]+derivativeBound;
+							}
+							
+							cj[j] = (cj[j] < UBound2 ? cj[j] : UBound2) > LBound2 ? (cj[j] < UBound2 ? cj[j] : UBound2) : LBound2;							
+							
+						}
+						
+						if (impute.get(j-1)){
+							cj[j-1] = cj[j-1] + G1*NHt;
+							
+							double UBound1 = 0;
+							double LBound1 = 0;
+							if (iter > iterBound_D_Beta){
+								UBound1 = Wj < Njm1Vfjm1+maxD.get(j-1) ? Wj : Njm1Vfjm1+maxD.get(j-1);
+								LBound1 = 0.01 > (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1))) ? 0.01 : (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1)));
+							} else {
+								UBound1 = Wj;
+								LBound1 = 0.01;
+							}
+							
+							if (BoundU1 == 1){
+								UBound1 = Njm1Vfjm1;
+							} else if (BoundL1 == 1){
+								LBound1 = LBound1 > Njm1Vfjm1 ? LBound1 : Njm1Vfjm1;
+							}
+							
+							if (k > startBound){
+								LBound1 = LBound1 > cjprev[j-1] - derivativeBound ? LBound1 : cjprev[j-1] - derivativeBound;
+								UBound1 = UBound1 < cjprev[j-1] + derivativeBound ? UBound1 : cjprev[j-1] + derivativeBound;
+							}
+							
+							cj[j] = (cj[j-1] < UBound1 ? cj[j-1] : UBound1) > LBound1 ? (cj[j-1] < UBound1 ? cj[j-1] : UBound1) : LBound1;
+								
+						}
+						
+						Nh[k+1][j] = Nh[k][j] + cj[j-1] - Wjp1*NjVfj/cj[j];
+						NHt = measuredDensity[k+1][j]-Nh[k+1][j];						
+						
+					} else if (flags[j] & !flags[j+1]){
+						
+						mode[k][j] = 3;
+						if (j==1){
+							Nh[k+1][j] = Nh[k][j] + inFlow - (Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j));
+						} else {
+							Nh[k+1][j] = Nh[k][j] + (qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j])) - (Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j));
+						}
+						
+					} else if (flags[j] & flags[j+1]){
+						mode[k][j] = 4;
+						
+						if (impute.get(j)){
+							double BoundL = lowerBounds[j];
+							double BoundU = upperBounds[j];
+							
+							double Nh0 = 0;
+							if (j==1){
+								Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+inFlow-Wjp1*NjVfj/cj[j]);
+							} else {
+								Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+Wj-Wjp1*NjVfj/cj[j]);
+							}
+							
+							if (cj[j]>Wjp1*(1-percTol) & cj[j]<Wjp1*(1+percTol) & Nh0<0){
+								cj[j] = cj[j] < Wjp1*(1-percTol/100) ? cj[j] : Wjp1*(1-percTol/100);
+								flags[j+1] = false;
+								j = j-1;
+								continue;							
+							}
+							
+							cj[j] = cj[j] > Wjp1 ? cj[j] : Wjp1;
+							
+							double NHt = Nh0/(1+G2*Wjp1*NjVfj);
+							
+							cj[j] = 1/(1/cj[j]-(G2*NHt < 1/cj[j]*0.99 ? G2*NHt : 1/cj[j]*0.99));
+							
+							double UBound = 0;
+							if (BoundU != 0){
+								UBound = (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) > 0.01 ? (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) : 0.01;
+							} else if (iter > iterBound_D_Beta){
+								UBound = maxLim*Wjp1 < (Wjp1 > NjVfj*maxD.get(j) ? Wjp1 : NjVfj*maxD.get(j)) ? maxLim*Wjp1 : (Wjp1 > NjVfj*maxD.get(j) ? Wjp1 : NjVfj*maxD.get(j));
+							} else {
+								UBound = maxLim*Wjp1;
+							}
+							
+							double LBound = NjVfj*BoundL > Wjp1 ? NjVfj*BoundL : Wjp1;
+							if (iter > iterBound_D_Beta){
+								LBound = LBound > NjVfj*(1-maxBeta.get(j)) ? LBound : NjVfj*(1-maxBeta.get(j));
+							} else {
+								LBound = LBound > 0.01 ? LBound : 0.01;
+							}
+							
+							if (k > startBound){
+								LBound = LBound > cjprev[j] - derivativeBound ? LBound : cjprev[j] - derivativeBound;
+								UBound = UBound < cjprev[j] + derivativeBound ? UBound : cjprev[j] + derivativeBound;
+							}
+							
+							cj[j] = (cj[j] < UBound ? cj[j] : UBound) > LBound ? (cj[j] < UBound ? cj[j] : UBound) : LBound;
+							
+						}
+						
+						if (j==1){
+							Nh[k+1][j] = Nh[k][j] + inFlow - Wjp1*NjVfj/cj[j];
+						} else {
+							Nh[k+1][j] = Nh[k][j] + Wj - Wjp1*NjVfj/cj[j];
+						}
+						
+						double NHt = measuredDensity[k+1][j] - Nh[k+1][j];
+						
+					}
+					
+				} // end of while loop over nodes
+				
+				for (i=0;i<cj.length;i++){
+					cj[i] = 0.01 > cj[i] ? 0.01 : cj[i];
+				}
+				
+				MyUtilities.assignRow(c, cj, k);
+				
+			} // end of for loop over nodes
 			
+			// line 586
 			
-			
-		}
+		} // end of for loop over time
 		
 		
 		
@@ -527,7 +793,7 @@ public class ImputationCoreAlgorithm {
 		
 		
 			
-	}
+	} // end of method run()
 	
 	private void initializeDataMatrices(){
 		
