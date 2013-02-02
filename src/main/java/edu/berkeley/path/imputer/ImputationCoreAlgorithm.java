@@ -224,7 +224,7 @@ public class ImputationCoreAlgorithm {
 		
 		ArrayList<Boolean> impute = new ArrayList<Boolean>();
 		for (int j=0;j<imputeOR.size();j++){
-			impute.add(imputeOR.get(j)|imputeFR.get(j));
+			impute.add(imputeOR.get(j)||imputeFR.get(j));
 		}
 		
 		int numberOfNodes = measuredDensity[0].length + 1;
@@ -446,8 +446,8 @@ public class ImputationCoreAlgorithm {
 		for (int ind = 0;ind < numberOfNodes - 2; ind++){
 			if (frPresent.get(ind)) lowerBounds[ind] = 0; else lowerBounds[ind] = 1;
 			if (orPresent.get(ind)) upperBounds[ind] = 0; else upperBounds[ind] = 1;
-			if (!frPresent.get(ind) & !orPresent.get(ind) & impute.get(ind)){
-				
+			if (!frPresent.get(ind) && !orPresent.get(ind) && impute.get(ind)){
+				// some error message given here originally
 			}			
 		}
 		if (downBoundaryCongested){
@@ -491,21 +491,25 @@ public class ImputationCoreAlgorithm {
 		
 		boolean[] flags = new boolean[numberOfNodes];
 		
+		// initialize csave: this is the effective demand vector arraylist for keeping track of the c matrix between iterations
+		LinkedList<double[][]> csave = new LinkedList<double[][]>();
+		LinkedList<Double> MError = new LinkedList<Double>(); 
+		double[][] Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		
 		// Learning Algorithm Loop
-		for (int iter = 1;iter <= iterMax;iter++){
+		for (int iter = 0;iter < iterMax;iter++){
 			
 			flags[0] = true;
 			
 			double[][] mode = MyUtilities.zerosMatrix(c.length, c[0].length-1);
 			
 			double InQ = 0;
-			double[][] Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
 			Nh = MyUtilities.assignRow(Nh, measuredDensity[0], 0);
 			double[] cj = c[0];
+			double[] Limit = new double[cellData.size()];
 			
 			for (int k=0;k<STime.length-1;k++){ // starts at line 328 and ends at line 584
 				
-				double[] Limit = new double[cellData.size()];
 				for (int j=0;j<Limit.length;j++){
 					Limit[j] = qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j]);
 				}
@@ -559,7 +563,7 @@ public class ImputationCoreAlgorithm {
 				double inFlow = Limit[0] < InQ ? Limit[0] : InQ;
 				InQ = InQ - inFlow;
 				
-				boolean needBoundaryImpute = downBoundaryCongested & (boundaryVelocity[k]<boundaryVF*0.9);
+				boolean needBoundaryImpute = downBoundaryCongested && (boundaryVelocity[k]<boundaryVF*0.9);
 				if (needBoundaryImpute){
 					flags[numberOfNodes-1] = true;
 				}
@@ -621,10 +625,10 @@ public class ImputationCoreAlgorithm {
 						Nh[k+1][j] = Nh[k][j] - NjVfj + cj[j-1];
 						NHt = measuredDensity[k+1][j] - Nh[k+1][j];
 						
-					} else if (!flags[j] & flags[j+1]){
+					} else if (!flags[j] && flags[j+1]){
 						mode[k][j] = 2;
 						
-						if (impute.get(j) & cj[j] > Wjp1*(1+percTol) & cj[j] < Wjp1*(1+percTol) & (Nh[k][j]+cj[j-1]-NjVfj)>measuredDensity[k+1][j]){
+						if (impute.get(j) && cj[j] > Wjp1*(1+percTol) && cj[j] < Wjp1*(1+percTol) && (Nh[k][j]+cj[j-1]-NjVfj)>measuredDensity[k+1][j]){
 							cj[j] = cj[j] < Wjp1*(1-percTol/100) ? cj[j] : Wjp1*(1-percTol/100);
 							flags[j+1] = false;
 							j = j-1;
@@ -701,7 +705,7 @@ public class ImputationCoreAlgorithm {
 						Nh[k+1][j] = Nh[k][j] + cj[j-1] - Wjp1*NjVfj/cj[j];
 						NHt = measuredDensity[k+1][j]-Nh[k+1][j];						
 						
-					} else if (flags[j] & !flags[j+1]){
+					} else if (flags[j] && !flags[j+1]){
 						
 						mode[k][j] = 3;
 						if (j==1){
@@ -710,7 +714,7 @@ public class ImputationCoreAlgorithm {
 							Nh[k+1][j] = Nh[k][j] + (qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j])) - (Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j));
 						}
 						
-					} else if (flags[j] & flags[j+1]){
+					} else if (flags[j] && flags[j+1]){
 						mode[k][j] = 4;
 						
 						if (impute.get(j)){
@@ -724,7 +728,7 @@ public class ImputationCoreAlgorithm {
 								Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+Wj-Wjp1*NjVfj/cj[j]);
 							}
 							
-							if (cj[j]>Wjp1*(1-percTol) & cj[j]<Wjp1*(1+percTol) & Nh0<0){
+							if (cj[j]>Wjp1*(1-percTol) && cj[j]<Wjp1*(1+percTol) && Nh0<0){
 								cj[j] = cj[j] < Wjp1*(1-percTol/100) ? cj[j] : Wjp1*(1-percTol/100);
 								flags[j+1] = false;
 								j = j-1;
@@ -782,15 +786,593 @@ public class ImputationCoreAlgorithm {
 				
 			} // end of for loop over nodes
 			
-			// line 586
+			csave.add(iter, c);
+			// skip the check in lines 587 to 589
+			double[][] dummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh, -1));
+			dummy1 = MyUtilities.matrixAbsValue(dummy1);
+			double[] dummy2 = MyUtilities.meanColumns(dummy1);
+			double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
+			MError.add(iter, MyUtilities.meanVector(dummy2)/MyUtilities.meanVector(dummy3));
 			
-		} // end of for loop over time
+			//skip displaying the current error
+			boolean flag = true;
+			for (int j=0;j<=iter;j++){
+				if (MError.get(iter)>MError.get(j)){
+					flag = false;
+				}
+			}
+			if (iter == startIterBound || (iter>startIterBound && flag )){
+				cBest = c;
+			}
+			
+			// Trigger algorithm to be triggered at pre-determined iterations
+			boolean flag2 = false;
+			for (int j=0;j<iterTrigger.length;j++){
+				if (iter == iterTrigger[j]){
+					flag2 = true;
+				}
+			}
+			
+			if (flag2){ // Trigger Algorithm block
+				
+				// Find regions that have bottlenecks (i.e. mode 3) Term I line 602
+				boolean[][] ModeFilter = new boolean[mode.length][mode[0].length];
+				for (int row=0;row<ModeFilter.length;row++){ 
+					for (int col=0;col<ModeFilter[0].length;col++){
+						if (mode[row][col] == 3){
+							ModeFilter[row][col] = true; 
+						} else {
+							ModeFilter[row][col] = false;
+						}
+					}
+				}
+				
+				if (downBoundaryCongested){
+					// Breaking Down line 604 into parts (Term I is the same as ModeFilter above)
+					// Term II, Part 1 (Mode == 1)
+					boolean[][] term2part1 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2part1.length;row++){
+						for (int col=0;col<term2part1[0].length;col++){
+							if (mode[row][col] == 1){
+								term2part1[row][col] = true; 
+							} else {
+								term2part1[row][col] = false;
+							}
+						}
+					}
+					
+					// Term II, Part 2 (ones(size(Mode,1),1)*[0 Impute(1:end-1)]==0)
+					ArrayList<Boolean> dummyImpute = new ArrayList<Boolean>();
+					dummyImpute.remove(dummyImpute.size()-1);
+					dummyImpute.add(0, false);
+					Boolean[] dummyImputeArray = dummyImpute.toArray(new Boolean[dummyImpute.size()]);
+					boolean[][] term2part2 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2part2.length;row++){ 
+						for (int col=0;col<term2part2[0].length;col++){
+							term2part2[row][col] = true && dummyImputeArray[col]; 
+						}
+					}
+					
+					for (int row=0;row<term2part2.length;row++){
+						for (int col=0;col<term2part1[0].length;col++){
+							if (term2part2[row][col] == false){
+								term2part2[row][col] = true; 
+							} else {
+								term2part2[row][col] = false;
+							}
+						}
+					}
+					
+					// Term II, Part 3 (Density-Nh>0)
+					boolean[][] term2part3 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2part3.length;row++){
+						for (int col=0;col<term2part3[0].length;col++){
+							if (measuredDensity[row][col] > Nh[row][col]){
+								term2part3[row][col] = true; 
+							} else {
+								term2part3[row][col] = false;
+							}
+						}
+					}
+					
+					// Term II, all parts together
+					boolean[][] term2 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2.length;row++){
+						for (int col=0;col<term2[0].length;col++){
+							term2[row][col] = term2part1[row][col] && term2part2[row][col] && term2part3[row][col];
+						}
+					}
+					
+					// Term III, Part 1
+					boolean[][] term3part1 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3part1.length;row++){
+						for (int col=0;col<term3part1[0].length;col++){
+							if (mode[row][col] == 4){
+								term3part1[row][col] = true; 
+							} else {
+								term3part1[row][col] = false;
+							}
+						}
+					}
+					
+					// Term III, Part 2
+					ArrayList<Boolean> dummyImpute2 = new ArrayList<Boolean>();
+					dummyImpute2.remove(dummyImpute2.size()-1);
+					dummyImpute2.add(dummyImpute2.size()-1, false);
+					Boolean[] dummyImputeArray2 = dummyImpute2.toArray(new Boolean[dummyImpute2.size()]);
+					boolean[][] term3part2 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3part2.length;row++){ 
+						for (int col=0;col<term3part2[0].length;col++){
+							term3part2[row][col] = true && dummyImputeArray2[col]; 
+						}
+					}
+					
+					for (int row=0;row<term3part2.length;row++){
+						for (int col=0;col<term2part1[0].length;col++){
+							if (term3part2[row][col] == false){
+								term3part2[row][col] = true; 
+							} else {
+								term3part2[row][col] = false;
+							}
+						}
+					}
+					
+					// Term III, Part 3 (Density-Nh<0)
+					boolean[][] term3part3 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3part3.length;row++){
+						for (int col=0;col<term3part3[0].length;col++){
+							if (measuredDensity[row][col] < Nh[row][col]){
+								term3part3[row][col] = true; 
+							} else {
+								term3part3[row][col] = false;
+							}
+						}
+					}
+					
+					// Term III, all parts together
+					boolean[][] term3 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3.length;row++){
+						for (int col=0;col<term3[0].length;col++){
+							term3[row][col] = term3part1[row][col] && term3part2[row][col] && term3part3[row][col];
+						}
+					}
+					
+					// All Terms Combined (line 604 Finally)
+					for (int row=0;row<ModeFilter.length;row++){ 
+						for (int col=0;col<ModeFilter[0].length;col++){
+							ModeFilter[row][col] = ModeFilter[row][col] || term2[row][col] || term3[row][col];
+						}
+					}
+				
+				} else {
+					
+					// Term I again is ModeFilter above.
+					
+					// Term II, Part 1 (Mode == 1)
+					boolean[][] term2part1 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2part1.length;row++){
+						for (int col=0;col<term2part1[0].length;col++){
+							if (mode[row][col] == 1){
+								term2part1[row][col] = true; 
+							} else {
+								term2part1[row][col] = false;
+							}
+						}
+					}
+					
+					// Term II, Part 2 (ones(size(Mode,1),1)*[0 Impute(1:end-1)]==0)
+					ArrayList<Boolean> dummyImpute = new ArrayList<Boolean>();
+					dummyImpute.add(0, false);
+					Boolean[] dummyImputeArray = dummyImpute.toArray(new Boolean[dummyImpute.size()]);
+					boolean[][] term2part2 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2part2.length;row++){ 
+						for (int col=0;col<term2part2[0].length;col++){
+							term2part2[row][col] = true && dummyImputeArray[col]; 
+						}
+					}
+					
+					for (int row=0;row<term2part2.length;row++){
+						for (int col=0;col<term2part1[0].length;col++){
+							if (term2part2[row][col] == false){
+								term2part2[row][col] = true; 
+							} else {
+								term2part2[row][col] = false;
+							}
+						}
+					}
+					
+					// Term II, Part 3 (Density-Nh>0)
+					boolean[][] term2part3 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2part3.length;row++){
+						for (int col=0;col<term2part3[0].length;col++){
+							if (measuredDensity[row][col] > Nh[row][col]){
+								term2part3[row][col] = true; 
+							} else {
+								term2part3[row][col] = false;
+							}
+						}
+					}
+					
+					// Term II, all parts together
+					boolean[][] term2 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term2.length;row++){
+						for (int col=0;col<term2[0].length;col++){
+							term2[row][col] = term2part1[row][col] && term2part2[row][col] && term2part3[row][col];
+						}
+					}
+					
+					// Term III, Part 1
+					boolean[][] term3part1 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3part1.length;row++){
+						for (int col=0;col<term3part1[0].length;col++){
+							if (mode[row][col] == 4){
+								term3part1[row][col] = true; 
+							} else {
+								term3part1[row][col] = false;
+							}
+						}
+					}
+					
+					// Term III, Part 2
+					ArrayList<Boolean> dummyImpute2 = new ArrayList<Boolean>();
+					dummyImpute2.add(dummyImpute2.size()-1, false);
+					Boolean[] dummyImputeArray2 = dummyImpute2.toArray(new Boolean[dummyImpute2.size()]);
+					boolean[][] term3part2 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3part2.length;row++){ 
+						for (int col=0;col<term3part2[0].length;col++){
+							term3part2[row][col] = true && dummyImputeArray2[col]; 
+						}
+					}
+					
+					for (int row=0;row<term3part2.length;row++){
+						for (int col=0;col<term2part1[0].length;col++){
+							if (term3part2[row][col] == false){
+								term3part2[row][col] = true; 
+							} else {
+								term3part2[row][col] = false;
+							}
+						}
+					}
+					
+					// Term III, Part 3 (Density-Nh<0)
+					boolean[][] term3part3 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3part3.length;row++){
+						for (int col=0;col<term3part3[0].length;col++){
+							if (measuredDensity[row][col] < Nh[row][col]){
+								term3part3[row][col] = true; 
+							} else {
+								term3part3[row][col] = false;
+							}
+						}
+					}
+					
+					// Term III, all parts together
+					boolean[][] term3 = new boolean[mode.length][mode[0].length];
+					for (int row=0;row<term3.length;row++){
+						for (int col=0;col<term3[0].length;col++){
+							term3[row][col] = term3part1[row][col] && term3part2[row][col] && term3part3[row][col];
+						}
+					}
+					
+					// All Terms Combined (line 606 Finally)
+					for (int row=0;row<ModeFilter.length;row++){ 
+						for (int col=0;col<ModeFilter[0].length;col++){
+							ModeFilter[row][col] = ModeFilter[row][col] || term2[row][col] || term3[row][col];
+						}
+					}
+										
+				} // line 607
+				
+				double[][] BottleError = new double[ModeFilter.length][ModeFilter[0].length];
+				for (int row=0;row<BottleError.length;row++){
+					for (int col=0;col<BottleError[0].length;col++){
+						if (ModeFilter[row][col] && measuredDensity[row][col]>0.001){
+							BottleError[row][col] = (measuredDensity[row][col]-Nh[row][col])/(measuredDensity[row][col] > 0.001 ? measuredDensity[row][col] : 0.001);
+						} else {
+							BottleError[row][col] = 0;
+						}
+					}
+				}
+				
+				boolean[][] Filter = new boolean[ModeFilter.length][ModeFilter[0].length];
+				for (int row=0;row<Filter.length;row++){ 
+					for (int col=0;col<Filter[0].length;col++){
+						if (col == Filter[0].length - 1){
+							Filter[row][col] = false;
+						} else {
+							Filter[row][col] = true;
+						}
+					}
+				}
+				
+				// Find the cells and instances where BottleError is greater than 0.05
+				ArrayList<Integer> rowIndeces = new ArrayList<Integer>();
+				ArrayList<Integer> colIndeces = new ArrayList<Integer>();
+				for (int row=0;row<ModeFilter.length;row++){ 
+					for (int col=0;col<ModeFilter[0].length;col++){
+						if (BottleError[row][col]>0.05 && Filter[row][col]){
+							rowIndeces.add(row);
+							colIndeces.add(col);
+						}
+					}
+				}
+				
+				double limitNew = 0;
+				for (int row=0;row<rowIndeces.size();row++){
+					if (impute.get(colIndeces.get(row))){
+						limitNew = Math.min(qmax.get(colIndeces.get(row)+1), w.get(colIndeces.get(row)+1)*(rhojam.get(colIndeces.get(row)+1) - Nh[rowIndeces.get(row)][colIndeces.get(row)+1]))*(1+percTol2);
+						c[rowIndeces.get(row)][colIndeces.get(row)] = limitNew;
+					}
+				}
+				
+				ArrayList<Integer> rowIndeces2 = new ArrayList<Integer>();
+				ArrayList<Integer> colIndeces2 = new ArrayList<Integer>();
+				for (int row=0;row<ModeFilter.length;row++){ 
+					for (int col=0;col<ModeFilter[0].length;col++){
+						if (BottleError[row][col]<-0.05 && Filter[row][col]){
+							rowIndeces2.add(row);
+							colIndeces2.add(col);
+						}
+					}
+				}
+				
+				for (int row=0;row<rowIndeces2.size();row++){
+					if (impute.get(colIndeces2.get(row))){
+						limitNew = Math.min(qmax.get(colIndeces.get(row)), w.get(colIndeces.get(row))*(rhojam.get(colIndeces.get(row)) - Nh[rowIndeces.get(row)][colIndeces.get(row)]))*(1-percTol2);
+					}
+				}
+				
+			} // line 634
+			
+		} // end of for loop over time (line 636)
 		
+		c = cBest;
 		
+		// *********************************************************************************************
+		// ******* Determine the Parameters dj and Beta from the effective demands *********************
+		// *********************************************************************************************
 		
+		boolean Override = false;
+		double[][] Nha = Nh;
+		double[][] BETA1 = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double[][] dj1 = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double[][] OrInp = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double[][] OnrampFlw = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double[][] FlowBet = measuredFlow;
+		FlowBet = MyUtilities.removeColumn(FlowBet, 1);
 		
+		for (int ii=1;ii<STime.length;ii++){   // line 655 to 758
+			Arrays.fill(dprev, 0);
+			for (int j=0;j<numberOfNodes-2;j++){
+				
+				if (!impute.get(j)){
+					
+					 double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - Nha[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
+					 double Term2 = this.qmax.get(j) < Nha[ii][j]*this.vf.get(j) ? this.qmax.get(j) : Nha[ii][j]*this.vf.get(j);
+					 
+					 if (!orPresent.get(j)){
+						 BETA1[ii][j] = Math.max(0, 1-c[ii][j]/Term2);
+						 OnrampFlw[ii][j] = 0;
+						 continue;
+					 }
+					 
+					 double MultFac = 0;
+					 
+					 if (c[ii][j]>Term1){
+						 
+						 if (!frPresent.get(j)){
+							 dj1[ii][j] = c[ii][j] - Term2;
+							 OrInp[ii][j] = dj1[ii][j] - dprev[j];
+							 OnrampFlw[ii][j] = dj1[ii][j]*Term1/c[ii][j];
+							 dprev[j] = dj1[ii][j] - OnrampFlw[ii][j];
+							 continue;
+						 }
+						 
+						 Term1 = Math.min(this.qmax.get(j+1), this.w.get(j+1)*(this.rhojam.get(j+1) - Nha[ii][j+1]));
+						 Term2 = Math.min(this.qmax.get(j), Nha[ii][j]*this.vf.get(j));
+						 double fac = Term1/c[ii][j];
+						 
+						 // Explicit Solution
+						 double d_soln = 0; double fr_soln = 0;
+						 if (imputeOR.get(j) && imputeFR.get(j) || Override){
+							 
+							 double dummyMax = Math.max(0, dprev[j]);
+							 dummyMax = Math.max(dummyMax, Term1 - FlowBet[ii][j]);
+							 dummyMax = Math.max(dummyMax, c[ii][j]-Term2);
+							 d_soln = Math.min(c[ii][j], dummyMax);
+							 fr_soln = Term2 + d_soln - c[ii][j];
+							 
+						 } else if (!imputeOR.get(j)){
+							 
+							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*this.simulationTimeStep, orFlow_Giv[ii][j]))/2;
+							 double d_vertex = 0;
+							 if (MultFac<1){
+								 d_vertex = (Term1 - FlowBet[ii][j])/fac;
+							 } else {
+								 d_vertex = orFlow_Giv[ii][j]/fac;
+							 }
+							 
+							 double dummyMax = Math.max(0, dprev[j]);
+							 dummyMax = Math.max(dummyMax, d_vertex);
+							 dummyMax = Math.max(dummyMax, c[ii][j]-Term2);
+							 d_soln = Math.min(c[ii][j], dummyMax);
+							 fr_soln = Term2 + d_soln - c[ii][j];							 
+							 
+						 } else {
+							 
+							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*this.simulationTimeStep, orFlow_Giv[ii][j]))/2;
+							 double d_vertex = 0;
+							 if (MultFac<1){
+								 d_vertex = (Term1 - FlowBet[ii][j])/fac;
+							 } else {
+								 d_vertex = (Term1 + frFlow_Giv[ii][j] - fac*Term2)/fac;
+							 }
+							 
+							 double dummyMax = Math.max(0, dprev[j]);
+							 dummyMax = Math.max(dummyMax, d_vertex);
+							 dummyMax = Math.max(dummyMax, c[ii][j]-Term2);
+							 d_soln = Math.min(c[ii][j], dummyMax);
+							 fr_soln = Term2 + d_soln - c[ii][j];
+							 
+						 }
+						 
+						 dj1[ii][j] = d_soln;
+						 BETA1[ii][j] = fr_soln/Term2;
+						 OrInp[ii][j] = d_soln-dprev[j];
+						 dprev[j] = d_soln - Term1/c[ii][j]*dj1[ii][j];
+						 
+					 } else {
+						 
+						 if (!frPresent.get(j)){
+							 dj1[ii][j] = c[ii][j] - Term2;
+							 OrInp[ii][j] = dj1[ii][j] - dprev[j];
+							 OnrampFlw[ii][j] = dj1[ii][j];
+							 dprev[j] = 0;
+							 continue;
+						 }
+						 
+						 Term2 = Math.min(qmax.get(j), Nha[ii][j]*vf.get(j));
+						 
+						 // Explicit Solution
+						 double s_soln = 0; double r_soln = 0;
+						 if (imputeOR.get(j) && imputeFR.get(j) || Override){
+							 
+							 double dummyMax = Math.max(0, Term2 - FlowBet[ii][j]);
+							 dummyMax = Math.max(dummyMax, Term2 - c[ii][j]);
+							 dummyMax = Math.min(dummyMax, Term2);
+							 s_soln = Math.min(Term2, dummyMax);
+							 r_soln = c[ii][j] - Term2 + s_soln;
+							 
+						 } else if(!imputeOR.get(j)){
+							 
+							 double s_bnd = Math.max(0, Term2 - c[ii][j]);
+							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*simulationTimeStep, orFlow_Giv[ii][j]))/2;
+							 double s_vertex = 0;
+							 if (MultFac<1){
+								 s_vertex = Term2 - FlowBet[ii][j];
+							 } else {
+								 s_vertex = Term2 + orFlow_Giv[ii][j] - c[ii][j];
+							 }
+							 s_soln = Math.min(Math.max(s_vertex, s_bnd), Term2);
+							 r_soln = c[ii][j] - Term2 + s_soln;
+							 
+						 } else {
+							 
+							 double s_bnd = Math.max(0, Term2 - c[ii][j]);
+							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*simulationTimeStep, frFlow_Giv[ii][j]))/2;
+							 double s_vertex = 0;
+							 if (MultFac<1){
+								 s_vertex = Term2 - FlowBet[ii][j];
+							 } else {
+								 s_vertex = frFlow_Giv[ii][j];
+							 }
+							 s_soln = Math.min(Math.max(s_vertex, s_bnd), Term2);
+							 r_soln = c[ii][j] - Term2 + s_soln;	
+							 
+						 }
+						 
+						 dj1[ii][j] = r_soln;
+						 BETA1[ii][j] = s_soln/Term2;
+						 OrInp[ii][j] = r_soln;
+						 dprev[j] = 0;		 
+						 
+					 }
+					 					 
+				}
+			}
+		} // line 758
 		
+		double[][] BETAF = new double[BETA.length][BETA[0].length];
+		for (int row = 0;row<BETAF.length;row++){
+			for (int col = 0;col<BETAF[0].length;col++){
+				BETAF[row][col] = Math.max(0, Math.min(BETA[row][col]+BETA1[row][col], 1));
+			}
+		}
+		double[][] DJ = new double[dj1.length][dj1[0].length];
+		for (int row = 0;row<DJ.length;row++){
+			for (int col = 0;col<DJ[0].length;col++){
+				DJ[row][col] = dj1[row][col] + Demand[row][col];
+			}
+		}
 		
+		double[] DJBound = new double[BETA.length];
+		if (downBoundaryCongested) {
+			DJBound = MyUtilities.fetchColumn(c, c.length);
+			for (int k=0;i<DJBound.length;k++){
+				DJBound[k] -= Math.min(qmax.get(cellData.size()-1), Nha[k][cellData.size()-1]*vf.get(cellData.size()-1));
+				if (c[k][cellData.size()-1] <= 0.00001 + qmax.get(cellData.size()-1)){
+					DJBound[k] = 0;
+				}
+			}
+		}
+		
+		// *********************************************************************************************
+		// ******* Using the DJ, run the model to get onramp flows *************************************
+		// *********************************************************************************************
+		
+		double[][] Nh_save = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Nh_save = Nh;
+		Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		
+		double[][] qj = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double[] InFlow = MyUtilities.onesVector(cellData.size());
+		double[] OutFlow = MyUtilities.onesVector(cellData.size());
+		
+		double InQ = 0;
+		MyUtilities.assignRow(Nh, MyUtilities.fetchRow(measuredDensity,1), 1);
+		Arrays.fill(dprev,0);
+		double[][] OnrampInput = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double BoundDprev = 0;
+		double[] dummyVect = new double[cellData.size()]; 
+			
+		for (int ii=1;ii<STime.length;ii++){ // line 786 
+			
+			dummyVect = MyUtilities.fetchRow(Nh, ii-1);
+			dummyVect = MyUtilities.addVectors(dummyVect, InFlow);
+			dummyVect = MyUtilities.addVectors(dummyVect, MyUtilities.scaleVector(OutFlow, -1));
+			Nh = MyUtilities.assignRow(Nh, dummyVect, ii);
+			
+			OutFlow[OutFlow.length-1] = Math.min(Nh[ii][Nh[0].length-1]*vf.get(vf.size()-1), qmax.get(qmax.size()-1));
+			
+			if (downBoundaryCongested){
+				
+				if (DJBound[ii]+OutFlow[OutFlow.length-1]>qmax.get(qmax.size()-1)){
+					
+					double BoundaryRampFlow = qmax.get(qmax.size()-1)/(DJBound[ii]+OutFlow[OutFlow.length-1])*DJBound[ii];
+					double BoundaryRampInp = DJBound[ii] - BoundDprev;
+					
+					BoundDprev = DJBound[ii] - BoundaryRampFlow;
+					OutFlow[OutFlow.length-1] = qmax.get(qmax.size()-1)/(DJBound[ii]+OutFlow[OutFlow.length-1])*OutFlow[OutFlow.length-1];
+					
+				} else {
+					
+					double BoundaryRampFlow = DJBound[ii];
+					double BoundaryRampInp = DJBound[ii] - BoundDprev;
+					BoundDprev = DJBound[ii] - BoundaryRampFlow;
+					
+				}
+				
+				InQ += inputFLW[ii];
+				
+				double Capacity = w.get(0)*(rhojam.get(0)-Nh[ii][0]);
+				InFlow[0] = Math.min(Capacity, InQ);
+				InQ -= InFlow[0];
+				
+				for (int j=1;j<numberOfNodes-1;j++){
+					
+					double[][] Beta = {{Math.round((1-BETAF[ii][j-1])*10000)/10000,1},{Math.round(BETAF[ii][j-1]*10000)/10000,0}};
+					double[] Demands = {Math.min(qmax.get(j-1), Nh[ii][j-1]*vf.get(j-1)), DJ[ii][j-1]};
+					
+					int NoOut = 2;
+					double[] DemandOut = {Beta[0][0]*Demands[0]+Beta[0][1]*Demands[1],Beta[1][0]*Demands[0]+Beta[1][1]*Demands[1]}; // 2x2 times 2x1 matrix multiplication
+					double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh[ii][j])),10000};
+					
+					double[][] Dij = Beta; // line 820
+					
+				}
+				
+			}
+		} // line 842
 		
 			
 	} // end of method run()

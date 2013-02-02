@@ -12,6 +12,12 @@ public class MyUtilitiesTest extends TestCase {
 		double[] input = {1,2,3};
 		assertTrue(Arrays.equals(expected, MyUtilities.scaleVector(input, 0.5)));
 	}
+	
+	public void testScaleMatrix(){
+		double[][] input = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
+		double[][] expected = {{2,4,6,8,10},{12,14,16,18,20},{22,24,26,28,30}};
+		assertTrue(MyUtilities.compareDoubleMatrices(expected, MyUtilities.scaleMatrix(input, 2)));
+	}
 
 	public void testAddVectors() {
 		double[] expected = {0,12,3.5};
@@ -100,6 +106,19 @@ public class MyUtilitiesTest extends TestCase {
 		assertTrue(MyUtilities.compareDoubleMatrices(expected1,MyUtilities.removeColumn(input, 1)));
 		assertTrue(MyUtilities.compareDoubleMatrices(expected2,MyUtilities.removeColumn(input, 5)));
 		assertTrue(MyUtilities.compareDoubleMatrices(expected3,MyUtilities.removeColumn(input, 3)));
+	}
+	
+	public void testAddMatrices(){
+		double[][] input1 = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
+		double[][] input2 = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
+		double[][] expected = {{2,4,6,8,10},{12,14,16,18,20},{22,24,26,28,30}};
+		assertTrue(MyUtilities.compareDoubleMatrices(expected, MyUtilities.addMatrices(input1, input2)));
+	}
+	
+	public void testMatrixAbsValue(){
+		double[][] input = {{-1,2,3,-4,5},{6,7,-8,9,10},{11,-12,-13,-14,-15}};
+		double[][] expected = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
+		assertTrue(MyUtilities.compareDoubleMatrices(expected, MyUtilities.matrixAbsValue(input)));		
 	}
 
 }

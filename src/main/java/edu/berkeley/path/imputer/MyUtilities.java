@@ -14,12 +14,21 @@ public class MyUtilities {
 	// ************ Array operations ***************************************************************
 	// *********************************************************************************************
 	
-	// Scaling
+	// Scale Vector
 	public static double[] scaleVector(double[] d, double s){
 		for (int k=0;k<d.length;k++){
 			d[k]*=s;			
 		}
 		return d;
+	}
+	
+	// Scale Matrix
+	public static double[][] scaleMatrix(double[][] M, double s){
+		double[][] out = new double[M.length][M[0].length];
+		for (int k=0;k<M.length;k++){
+			out[k] = scaleVector(M[k],s);			
+		}
+		return out;
 	}
 	
 	// Adding
@@ -180,6 +189,32 @@ public class MyUtilities {
 		return matrixOut;
 	}
 	
+	// matrix addition
+	public static double[][] addMatrices(double[][] M1, double[][] M2){
+		if (M1.length != M2.length | M1[0].length != M2[0].length){
+			throw new ArithmeticException();
+		}
+		double[][] out = new double[M1.length][M1[0].length];
+		for (int i = 0;i<M1.length;i++){
+			out[i] = addVectors(M1[i], M2[i]);
+		}
+		return out;
+	}
+	
+	// matrix absolute value
+	public static double[][] matrixAbsValue(double[][] M){
+		double[][] out = new double[M.length][M[0].length];
+		for (int i=0;i<M.length;i++){
+			for (int j=0;j<M[i].length;j++){
+				out[i][j] = Math.abs(M[i][j]);
+			}
+			
+		}
+		return out;
+	}	
+	
+	
+	
 	// TODO: Write tests for the methods below this
 	// create vector of ones
 	public static double[] onesVector(int size){
@@ -221,6 +256,31 @@ public class MyUtilities {
 		return out;
 	}
 	
+	// vector mean
+	public static double meanVector(double[] v){
+		double sum = 0;
+		for (int i=0;i<v.length;i++){
+			sum += v[i];
+		}
+		return sum / v.length;
+	}
 	
+	// matrix columnwise means
+	public static double[] meanColumns(double[][] M){
+		double[] out = new double[M[0].length];
+		for (int i=0;i<M[0].length;i++){
+			out[i] = meanVector(fetchColumn(M,i+1));
+		}
+		return out;
+	}	
+	
+	// Fetch row from Matrix
+	public static double[] fetchRow(double[][] matrix, int rowIndex){
+		double[] out = new double[matrix.length];
+		for (int i=0;i<matrix[0].length;i++){
+			out[i] = matrix[rowIndex-1][i];
+		}
+		return out;
+	}
 
 }
