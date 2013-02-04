@@ -1324,6 +1324,8 @@ public class ImputationCoreAlgorithm {
 		double[][] OnrampInput = MyUtilities.zerosMatrix(STime.length, cellData.size());
 		double BoundDprev = 0;
 		double[] dummyVect = new double[cellData.size()]; 
+		double[] BoundaryRampFlow = new double[STime.length];
+		double[] BoundaryRampInp = new double[STime.length];
 			
 		for (int ii=1;ii<STime.length;ii++){ // line 786 
 			
@@ -1338,19 +1340,21 @@ public class ImputationCoreAlgorithm {
 				
 				if (DJBound[ii]+OutFlow[OutFlow.length-1]>qmax.get(qmax.size()-1)){
 					
-					double BoundaryRampFlow = qmax.get(qmax.size()-1)/(DJBound[ii]+OutFlow[OutFlow.length-1])*DJBound[ii];
-					double BoundaryRampInp = DJBound[ii] - BoundDprev;
+					BoundaryRampFlow[ii] = qmax.get(qmax.size()-1)/(DJBound[ii]+OutFlow[OutFlow.length-1])*DJBound[ii];
+					BoundaryRampInp[ii] = Math.max(0, DJBound[ii] - BoundDprev);
 					
-					BoundDprev = DJBound[ii] - BoundaryRampFlow;
+					BoundDprev = DJBound[ii] - BoundaryRampFlow[ii];
 					OutFlow[OutFlow.length-1] = qmax.get(qmax.size()-1)/(DJBound[ii]+OutFlow[OutFlow.length-1])*OutFlow[OutFlow.length-1];
 					
 				} else {
 					
-					double BoundaryRampFlow = DJBound[ii];
-					double BoundaryRampInp = DJBound[ii] - BoundDprev;
-					BoundDprev = DJBound[ii] - BoundaryRampFlow;
+					BoundaryRampFlow[ii] = DJBound[ii];
+					BoundaryRampInp[ii] = Math.max(0, DJBound[ii] - BoundDprev);
+					BoundDprev = DJBound[ii] - BoundaryRampFlow[ii];
 					
 				}
+				
+			}
 				
 				InQ += inputFLW[ii];
 				
@@ -1368,12 +1372,150 @@ public class ImputationCoreAlgorithm {
 					double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh[ii][j])),10000};
 					
 					double[][] Dij = Beta; // line 820
+					Dij[0][0] = Beta[0][0]*Demands[0]; Dij[0][1] = Beta[0][1]*Demands[1];
+					Dij[1][0] = Beta[1][0]*Demands[0]; Dij[1][1] = Beta[1][1]*Demands[1];
+					
+					if (DemandOut[0] != 0){
+						Dij[0][0] *= Math.min(DemandOut[0], Capacities[0])/DemandOut[0];
+						Dij[1][0] *= Math.min(DemandOut[0], Capacities[0])/DemandOut[0];
+					}
+					
+					if (DemandOut[1] != 0){
+						Dij[0][1] *= Math.min(DemandOut[1], Capacities[1])/DemandOut[1];
+						Dij[1][1] *= Math.min(DemandOut[1], Capacities[1])/DemandOut[1];
+					}
+					
+					Demands[0] = Dij[0][0]+Dij[0][1]; Demands[1] = Dij[0][1]+Dij[1][1];
+					Double[] AdjFact = new Double[2];
+					AdjFact[0] = Math.min(Dij[0][0]/Demands[0]*Beta[0][0], Dij[0][1]/Demands[1]*Beta[0][1]);
+					AdjFact[1] = Math.min(Dij[0][1]/Demands[0]*Beta[0][1], Dij[1][1]/Demands[1]*Beta[1][1]);
+					
+					if (AdjFact[0].equals(java.lang.Double.NaN)){ AdjFact[0] = 0.0; }
+					if (AdjFact[1].equals(java.lang.Double.NaN)){ AdjFact[1] = 0.0; }
+					
+					double[] flow = new double[2]; flow[0] = Demands[0]*AdjFact[0]; flow[1] = Demands[1]*AdjFact[1];
+					
+					OutFlow[j-1] = flow[0];
+					OrFlow[ii][j-1] = flow[1];
+					
+					qj[ii][j-1] = qj[ii][j-1]-flow[1];
+					InFlow[j] = Beta[0][0]*flow[0] + Beta[0][1]*flow[1];
+					FrFlow[ii][j-1] = Beta[1][0]*flow[0] + Beta[1][1]*flow[1];
+					FlowBet[ii][j-1] = DJ[ii][j-1]-dprev[j-1];
+					dprev[j-1] = DJ[ii][j-1]-flow[1];
+					
+				}
+				
+			} // line 842
+		
+		// skip lines 844,845 (messages to the user)
+		
+		// *********************************************************************************************
+		// ******* Check Onramp flows calculated in the previous section *******************************
+		// *********************************************************************************************
+		
+		Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		qj = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		InFlow = MyUtilities.onesVector(cellData.size());
+		OutFlow = MyUtilities.onesVector(cellData.size());
+		double[][] ORINP = OnrampInput;
+		for (int j=0;j<ORINP.length;j++){
+			for (int k=0;k<ORINP[0].length;k++){
+				ORINP[j][k] = Math.max(0, ORINP[j][k]);
+			}
+		}
+		
+		double[] DJBoundSav = new double[DJBound.length];
+		double BoundaryQ = 0.0;
+		InQ = 0;
+		Nh = MyUtilities.assignRow(Nh, measuredDensity[0], 0);
+		
+		double[][] InFl = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		double[][] OutFl = MyUtilities.zerosMatrix(STime.length, cellData.size());
+	
+		for(int ii=1;ii<STime.length;ii++){
+			
+			InFl = MyUtilities.assignRow(InFl, InFlow, ii+1);
+			OutFl = MyUtilities.assignRow(OutFl, OutFlow, ii+1);
+			double[] dummyV = MyUtilities.addVectors(MyUtilities.fetchRow(Nh, ii), InFlow);
+			dummyV = MyUtilities.addVectors(dummyV, MyUtilities.scaleVector(OutFlow, -1));
+			Nh = MyUtilities.assignRow(Nh, dummyV, ii+1);
+			
+			OutFlow[OutFlow.length-1] = Math.min(Nh[ii][Nh[0].length-1]*vf.get(vf.size()-1), qmax.get(qmax.size()-1));
+			
+			if(downBoundaryCongested){
+				
+				BoundaryQ = BoundaryQ + BoundaryRampInp[ii];
+				DJBoundSav[ii] = BoundaryQ;
+				
+				if (downBoundaryCongested){
+					
+					BoundaryRampFlow[ii] = qmax.get(qmax.size()-1)/(BoundaryQ+OutFlow[OutFlow.length-1])*BoundaryQ;
+					OutFlow[OutFlow.length-1] = qmax.get(qmax.size()-1)/(BoundaryQ+OutFlow[OutFlow.length-1])*OutFlow[OutFlow.length-1];
+					BoundaryQ = BoundaryQ - BoundaryRampFlow[ii];
+					
+				} else {
+					
+					BoundaryRampFlow[ii] = BoundaryQ;
+					BoundaryQ = BoundaryQ - BoundaryRampFlow[ii];
 					
 				}
 				
 			}
-		} // line 842
+			
+			qj = MyUtilities.assignRow(qj, MyUtilities.addVectors(MyUtilities.fetchRow(qj, ii-1), MyUtilities.fetchRow(ORINP, ii)), ii);
+			
+			InQ = InQ + inputFLW[ii];
+			double Capacity = w.get(0)*(rhojam.get(0)-Nh[ii][1]);
+			InFlow[0] = Math.min(Capacity, InQ);
+			InQ = InQ - InFlow[0];
+			
+			for (int j=0;j<numberOfNodes-1;j++){
+				
+				double[][] Beta = {{Math.round((1-BETAF[ii][j-1])*10000)/10000,1},{Math.round(BETAF[ii][j-1]*10000)/10000,0}};
+				double[] Demands = {Math.min(qmax.get(j-1), Nh[ii][j-1]*vf.get(j-1)), qj[ii][j-1]};
+				
+				int NoOut = 2;
+				double[] DemandOut = {Beta[0][0]*Demands[0]+Beta[0][1]*Demands[1],Beta[1][0]*Demands[0]+Beta[1][1]*Demands[1]}; // 2x2 times 2x1 matrix multiplication
+				double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh[ii][j])),10000};
+				
+				double[][] Dij = Beta; // line 820
+				Dij[0][0] = Beta[0][0]*Demands[0]; Dij[0][1] = Beta[0][1]*Demands[1];
+				Dij[1][0] = Beta[1][0]*Demands[0]; Dij[1][1] = Beta[1][1]*Demands[1];
+				
+				if (DemandOut[0] != 0){
+					Dij[0][0] *= Math.min(DemandOut[0], Capacities[0])/DemandOut[0];
+					Dij[1][0] *= Math.min(DemandOut[0], Capacities[0])/DemandOut[0];
+				}
+				
+				if (DemandOut[1] != 0){
+					Dij[0][1] *= Math.min(DemandOut[1], Capacities[1])/DemandOut[1];
+					Dij[1][1] *= Math.min(DemandOut[1], Capacities[1])/DemandOut[1];
+				}
+				
+				Demands[0] = Dij[0][0]+Dij[0][1]; Demands[1] = Dij[0][1]+Dij[1][1];
+				Double[] AdjFact = new Double[2];
+				AdjFact[0] = Math.min(Dij[0][0]/Demands[0]*Beta[0][0], Dij[0][1]/Demands[1]*Beta[0][1]);
+				AdjFact[1] = Math.min(Dij[0][1]/Demands[0]*Beta[0][1], Dij[1][1]/Demands[1]*Beta[1][1]);
+				
+				if (AdjFact[0].equals(java.lang.Double.NaN)){ AdjFact[0] = 0.0; }
+				if (AdjFact[1].equals(java.lang.Double.NaN)){ AdjFact[1] = 0.0; }
+				
+				double[] flow = new double[2]; flow[0] = Demands[0]*AdjFact[0]; flow[1] = Demands[1]*AdjFact[1];
+				
+				qj[ii][j-1] = qj[ii][j-1]-flow[1];
+				InFlow[j] = Beta[0][0]*flow[0] + Beta[0][1]*flow[1];
+				OutFlow[j-1] = flow[0];
+				OrFlow[ii][j-1] = flow[1];
+				FrFlow[ii][j-1] = Beta[1][0]*flow[0] + Beta[1][1]*flow[1];
+				FlowBet[ii][j-1] = DJ[ii][j-1]-dprev[j-1];
+								
+			}
+			
+		}
 		
+		// calculate density and flow errors at the end of the method:
+		// line 931 (burda kaldim)
 			
 	} // end of method run()
 	
@@ -1384,12 +1526,6 @@ public class ImputationCoreAlgorithm {
 		measuredSpeed = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
 		measuredOrFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
 		measuredFrFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
-		
-//		Arrays.fill(measuredDensity, 0);
-//		Arrays.fill(measuredFlow, 0);
-//		Arrays.fill(measuredSpeed, 0);
-//		Arrays.fill(measuredOrFlow, 0);
-//		Arrays.fill(measuredFrFlow, 0);
 		
 	}
 

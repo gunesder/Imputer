@@ -50,7 +50,7 @@ public class MyUtilities {
 			throw new ArithmeticException();
 		}
 		for (int k=0;k<vector.length;k++){
-			matrix[k][columnIndex-1] = vector[k];			
+			matrix[k][columnIndex] = vector[k];			
 		}
 		return matrix;
 	}
@@ -131,7 +131,7 @@ public class MyUtilities {
 		double[][] matrixOut = new double[newsize][matrix[0].length];
 		// assign columns
 		for (int i = 0; i < matrixOut[0].length; i++) {
-		    matrixOut = MyUtilities.assignColumn(matrixOut, MyUtilities.interpolateVector(MyUtilities.fetchColumn(matrix, i+1), newsize), i+1);
+		    matrixOut = MyUtilities.assignColumn(matrixOut, MyUtilities.interpolateVector(MyUtilities.fetchColumn(matrix, i), newsize), i);
 		}
 		return matrixOut;
 	}
@@ -140,7 +140,7 @@ public class MyUtilities {
 	public static double[] fetchColumn(double[][] matrix, int columnIndex){
 		double[] out = new double[matrix.length];
 		for (int i=0;i<matrix.length;i++){
-			out[i] = matrix[i][columnIndex-1];
+			out[i] = matrix[i][columnIndex];
 		}
 		return out;
 	}
@@ -180,9 +180,9 @@ public class MyUtilities {
 		columnIndex--;
 		while (k<matrixOut[0].length){
 			if (k<columnIndex){
-				matrixOut = MyUtilities.assignColumn(matrixOut, MyUtilities.fetchColumn(matrix, k+1), k+1);
+				matrixOut = MyUtilities.assignColumn(matrixOut, MyUtilities.fetchColumn(matrix, k), k);
 			} else {
-				matrixOut = MyUtilities.assignColumn(matrixOut, MyUtilities.fetchColumn(matrix, k+2), k+1);
+				matrixOut = MyUtilities.assignColumn(matrixOut, MyUtilities.fetchColumn(matrix, k+1), k);
 			}
 			k++;
 		}

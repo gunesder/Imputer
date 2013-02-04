@@ -31,12 +31,12 @@ public class MyUtilitiesTest extends TestCase {
 		double[][] expected = {{1,31,3,4,5},{6,31,8,9,10},{11,31,13,14,15}};
 		double[][] input1 = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
 		double[] input2 = {31,31,31};
-		assertTrue(Arrays.deepEquals(expected, MyUtilities.assignColumn(input1, input2, 2)));
+		assertTrue(Arrays.deepEquals(expected, MyUtilities.assignColumn(input1, input2, 1)));
 		// tall matrix
 		double[][] expected2 = {{1,31,3},{4,31,6},{7,31,9},{10,31,12},{13,31,15}};
 		double[][] input3 = {{1,2,3},{4,5,6},{7,8,9},{10,11,12},{13,14,15}};
 		double[] input4 = {31,31,31,31,31};
-		assertTrue(Arrays.deepEquals(expected2, MyUtilities.assignColumn(input3, input4, 2)));		
+		assertTrue(Arrays.deepEquals(expected2, MyUtilities.assignColumn(input3, input4, 1)));		
 	}
 
 	public void testAppendColumn() {
@@ -79,11 +79,11 @@ public class MyUtilitiesTest extends TestCase {
 		// fat matrix
 		double[][] input = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
 		double[] expected = {4,9,14};
-		assertTrue(Arrays.equals(expected, MyUtilities.fetchColumn(input, 4)));
+		assertTrue(Arrays.equals(expected, MyUtilities.fetchColumn(input, 3)));
 		// tall matrix
 		double[][] input2 = {{1,2,3},{4,5,6},{7,8,9},{10,11,12},{13,14,15}};
 		double[] expected2 = {3,6,9,12,15};
-		assertTrue(Arrays.equals(expected2, MyUtilities.fetchColumn(input2, 3)));
+		assertTrue(Arrays.equals(expected2, MyUtilities.fetchColumn(input2, 2)));
 	}
 	
 	public void testCompareDoubleMatrices(){
