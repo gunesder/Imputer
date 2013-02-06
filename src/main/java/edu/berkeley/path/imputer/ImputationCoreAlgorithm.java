@@ -13,7 +13,7 @@ public class ImputationCoreAlgorithm {
 		private HashMap<Integer,Detector> detectorList = new HashMap<Integer,Detector>();
 		private double demandTimeStep = 5.0/60.0; // [hours] 5 minute default
 		private double simulationTimeStep = 5.0/60.0/60.0; // [hours] 5 second default
-		private boolean downBoundaryCongested = false;
+		private boolean downBoundaryCongested = true;
 		// derived fields (vector quantities)
 		private ArrayList<Double> linkLength = new ArrayList<Double>();
 		private ArrayList<Integer> lane = new ArrayList<Integer>();
@@ -100,9 +100,9 @@ public class ImputationCoreAlgorithm {
 				tempSPD_HOV = MyUtilities.scaleVector(tempSPD_HOV,c.getLinks().getFirst().getLanesHOV());
 				double[] tempSPD = MyUtilities.addVectors(tempSPD_ML, tempSPD_HOV);
 				tempSPD = MyUtilities.scaleVector(tempSPD, 1/(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
-				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, tempSPD, i+1);
+				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, tempSPD, i);
 			} else {
-				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, c.getDetectorML().getSpeedDataArray(), i+1);
+				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, c.getDetectorML().getSpeedDataArray(), i);
 			}
 			
 			// Density Measurements
@@ -110,9 +110,9 @@ public class ImputationCoreAlgorithm {
 				double[] tempDTY_ML = c.getDetectorML().getDensityDataArray();
 				double[] tempDTY_HOV = c.getDetectorHOV().getDensityDataArray();
 				double[] tempDTY = MyUtilities.addVectors(tempDTY_ML,tempDTY_HOV);
-				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(tempDTY,dummyLength*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV())), i+1);
+				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(tempDTY,dummyLength*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV())), i);
 			} else {
-				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(c.getDetectorML().getDensityDataArray(),dummyLength*c.getLinks().getFirst().getLanesML()), i+1);
+				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(c.getDetectorML().getDensityDataArray(),dummyLength*c.getLinks().getFirst().getLanesML()), i);
 			}
 			
 			// Flow Measurements
@@ -121,9 +121,9 @@ public class ImputationCoreAlgorithm {
 				double[] tempFLW_HOV = c.getDetectorHOV().getFlowDataArray();
 				double[] tempFLW = MyUtilities.addVectors(tempFLW_ML,tempFLW_HOV);
 				tempFLW = MyUtilities.scaleVector(tempFLW,this.simulationTimeStep*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
-				measuredFlow = MyUtilities.assignColumn(measuredFlow, tempFLW, i+1);
+				measuredFlow = MyUtilities.assignColumn(measuredFlow, tempFLW, i);
 			} else {
-				measuredFlow = MyUtilities.assignColumn(measuredFlow, MyUtilities.scaleVector(c.getDetectorML().getFlowDataArray(),this.simulationTimeStep*c.getLinks().getFirst().getLanesML()), i+1);
+				measuredFlow = MyUtilities.assignColumn(measuredFlow, MyUtilities.scaleVector(c.getDetectorML().getFlowDataArray(),this.simulationTimeStep*c.getLinks().getFirst().getLanesML()), i);
 			}
 			
 			// Fundamental Diagram Parameters
@@ -142,24 +142,24 @@ public class ImputationCoreAlgorithm {
 				// Aggregate
 				vf.add((qmax_ML+qmax_HOV)/(rhocrit_ML+rhocrit_HOV));
 				w.add((qmax_ML+qmax_HOV)/(rhojam_ML+rhojam_HOV-rhocrit_ML-rhocrit_HOV));
-				rhojam.add(rhojam_ML+rhojam_HOV);
-				qmax.add(qmax_ML+qmax_HOV);
+				rhojam.add((rhojam_ML+rhojam_HOV)*lane.get(i));
+				qmax.add((qmax_ML+qmax_HOV)*lane.get(i));
 			
 			} else {
 				
 				vf.add(c.getDetectorML().getFdParams().getVf()*this.simulationTimeStep/dummyLength);
 				w.add(c.getDetectorML().getFdParams().getW()*this.simulationTimeStep/dummyLength);
-				rhojam.add(c.getDetectorML().getFdParams().getRho_jam()*dummyLength);
-				qmax.add(c.getDetectorML().getFdParams().getQ_max()*this.simulationTimeStep);
+				rhojam.add(c.getDetectorML().getFdParams().getRho_jam()*dummyLength*lane.get(i));
+				qmax.add(c.getDetectorML().getFdParams().getQ_max()*this.simulationTimeStep*lane.get(i));
 				
 			}
 			
 			// Known Ramp Flows
 			double[] dummyVector = MyUtilities.sumColumns(c.getMeasuredOnrampFlow());
-			measuredOrFlow = MyUtilities.assignColumn(measuredOrFlow, dummyVector, i+1);
+			measuredOrFlow = MyUtilities.assignColumn(measuredOrFlow, dummyVector, i);
 			
 			double[] dummyVector2 = MyUtilities.sumColumns(c.getMeasuredOfframpFlow());
-			measuredFrFlow = MyUtilities.assignColumn(measuredFrFlow, dummyVector2, i+1);
+			measuredFrFlow = MyUtilities.assignColumn(measuredFrFlow, dummyVector2, i);
 			
 			// Ramps present and need imputation boolean vectors
 			boolean dummy = false;
@@ -202,12 +202,12 @@ public class ImputationCoreAlgorithm {
 		measuredFrFlow = MyUtilities.interpolateMatrix(measuredFrFlow,(int) (24/this.simulationTimeStep));
 		
 		// variables needed for the downstream boundary congested case (line 126 of matlab code)
-		double[] boundaryVelocity = MyUtilities.fetchColumn(measuredSpeed, measuredSpeed[0].length);
+		double[] boundaryVelocity = MyUtilities.fetchColumn(measuredSpeed, measuredSpeed[0].length-1);
 		double boundaryVF = this.vf.get(this.vf.size()-1)*this.linkLength.get(this.linkLength.size()-1)/this.simulationTimeStep; 
 		
 		// additional post-processing of variables (line 165 of matlab code)
-		double[] orFLW_save = MyUtilities.fetchColumn(measuredOrFlow, 1);
-		double[] inputFLW = MyUtilities.addVectors(MyUtilities.fetchColumn(measuredFlow, 1),orFLW_save);
+		double[] orFLW_save = MyUtilities.fetchColumn(measuredOrFlow, 0);
+		double[] inputFLW = MyUtilities.addVectors(MyUtilities.fetchColumn(measuredFlow, 0),orFLW_save);
 		// skipped the assignment in line 169 of matlab
 		
 		// n'th cell offramp is paired with the n+1'th cell onramp at the node level. the following manipulations are made to take this into account
@@ -216,8 +216,8 @@ public class ImputationCoreAlgorithm {
 		orPresent.remove(0);
 		frPresent.remove(frPresent.size()-1);
 		
-		double[][] OrFlow = MyUtilities.removeColumn(measuredOrFlow, 1);
-		double[][] FrFlow = MyUtilities.removeColumn(measuredFrFlow, measuredFrFlow[0].length);
+		double[][] OrFlow = MyUtilities.removeColumn(measuredOrFlow, 0);
+		double[][] FrFlow = MyUtilities.removeColumn(measuredFrFlow, measuredFrFlow[0].length-1);
 		
 		double[][] orFlow_Giv = measuredOrFlow; // probably superfluous but keeping up with the matlab code for now
 		double[][] frFlow_Giv = measuredFrFlow; // probably superfluous but keeping up with the matlab code for now
@@ -441,18 +441,18 @@ public class ImputationCoreAlgorithm {
 		// ************** Check that ramps are present whenever imputation is enabled ******************
 		// *********************************************************************************************
 		
-		double[] lowerBounds = new double[numberOfNodes-2];
-		double[] upperBounds = new double[numberOfNodes-2];
+		ArrayList<Double> lowerBounds = new ArrayList<Double>(); for (int j=0;j<numberOfNodes-2;j++) lowerBounds.add(0.0);
+		ArrayList<Double> upperBounds = new ArrayList<Double>(); for (int j=0;j<numberOfNodes-2;j++) upperBounds.add(0.0);
 		for (int ind = 0;ind < numberOfNodes - 2; ind++){
-			if (frPresent.get(ind)) lowerBounds[ind] = 0; else lowerBounds[ind] = 1;
-			if (orPresent.get(ind)) upperBounds[ind] = 0; else upperBounds[ind] = 1;
+			if (frPresent.get(ind)) lowerBounds.set(ind, 0.0); else lowerBounds.set(ind, 1.0);
+			if (orPresent.get(ind)) upperBounds.set(ind, 0.0); else upperBounds.set(ind, 1.0);
 			if (!frPresent.get(ind) && !orPresent.get(ind) && impute.get(ind)){
 				// some error message given here originally
 			}			
 		}
 		if (downBoundaryCongested){
-			lowerBounds[numberOfNodes-2] = 1;
-			upperBounds[numberOfNodes-2] = 0;
+			lowerBounds.add(1.0);
+			upperBounds.add(0.0);
 		}
 		
 		// *********************************************************************************************
@@ -540,10 +540,10 @@ public class ImputationCoreAlgorithm {
 						cj[j] = NjVfj*(1-BETA[k][j]) + Demand[k][j];
 					} else {
 						if (iter>startIterBound){
-							if (lowerBounds[j] !=0){
+							if (lowerBounds.get(j) !=0){
 								cj[j] = cj[j] > NjVfj ? cj[j] : NjVfj;
 							}
-							if (upperBounds[j] != 0){
+							if (upperBounds.get(j) != 0){
 								cj[j] = cj[j] < NjVfj ? cj[j] : NjVfj;
 							}
 						}
@@ -587,8 +587,8 @@ public class ImputationCoreAlgorithm {
 					if (!flags[j] && !flags[j+1]){ // starts at line 391 and ends at line 577
 						mode[k][j] = 1;
 						
-						double BoundL = lowerBounds[j-1];
-						double BoundU = upperBounds[j-1];
+						double BoundL = lowerBounds.get(j-1);
+						double BoundU = upperBounds.get(j-1);
 						
 						double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]-NjVfj+cj[j-1]);
 						double NHt = Nh0/(1+G1);
@@ -637,10 +637,10 @@ public class ImputationCoreAlgorithm {
 						
 						cj[j] = cj[j] > Wjp1 ? cj[j] : Wjp1;
 						
-						double BoundL1 = lowerBounds[j-1];
-						double BoundU1 = upperBounds[j-1];
-						double BoundL2 = lowerBounds[j];
-						double BoundU2 = upperBounds[j];
+						double BoundL1 = lowerBounds.get(j-1);
+						double BoundU1 = upperBounds.get(j-1);
+						double BoundL2 = lowerBounds.get(j);
+						double BoundU2 = upperBounds.get(j);
 						
 						double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+cj[j-1]-Wjp1*NjVfj/cj[j]);
 						double NHt = Nh0 / (1+G1*(impute.get(j-1) ? 1 : 0)+G2*Wjp1*NjVfj*(impute.get(j) ? 1 : 0));
@@ -718,8 +718,8 @@ public class ImputationCoreAlgorithm {
 						mode[k][j] = 4;
 						
 						if (impute.get(j)){
-							double BoundL = lowerBounds[j];
-							double BoundU = upperBounds[j];
+							double BoundL = lowerBounds.get(j);
+							double BoundU = upperBounds.get(j);
 							
 							double Nh0 = 0;
 							if (j==1){
@@ -794,7 +794,8 @@ public class ImputationCoreAlgorithm {
 			double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
 			MError.add(iter, MyUtilities.meanVector(dummy2)/MyUtilities.meanVector(dummy3));
 			
-			//skip displaying the current error
+			System.out.println("Density Error: " + MError.get(iter) + ", iteration: " + iter + "of " + iterMax);
+			
 			boolean flag = true;
 			for (int j=0;j<=iter;j++){
 				if (MError.get(iter)>MError.get(j)){
@@ -1319,7 +1320,7 @@ public class ImputationCoreAlgorithm {
 		double[] OutFlow = MyUtilities.onesVector(cellData.size());
 		
 		double InQ = 0;
-		MyUtilities.assignRow(Nh, MyUtilities.fetchRow(measuredDensity,1), 1);
+		MyUtilities.assignRow(Nh, MyUtilities.fetchRow(measuredDensity,1), 0);
 		Arrays.fill(dprev,0);
 		double[][] OnrampInput = MyUtilities.zerosMatrix(STime.length, cellData.size());
 		double BoundDprev = 0;
@@ -1435,11 +1436,11 @@ public class ImputationCoreAlgorithm {
 	
 		for(int ii=1;ii<STime.length;ii++){
 			
-			InFl = MyUtilities.assignRow(InFl, InFlow, ii+1);
-			OutFl = MyUtilities.assignRow(OutFl, OutFlow, ii+1);
+			InFl = MyUtilities.assignRow(InFl, InFlow, ii);
+			OutFl = MyUtilities.assignRow(OutFl, OutFlow, ii);
 			double[] dummyV = MyUtilities.addVectors(MyUtilities.fetchRow(Nh, ii), InFlow);
 			dummyV = MyUtilities.addVectors(dummyV, MyUtilities.scaleVector(OutFlow, -1));
-			Nh = MyUtilities.assignRow(Nh, dummyV, ii+1);
+			Nh = MyUtilities.assignRow(Nh, dummyV, ii);
 			
 			OutFlow[OutFlow.length-1] = Math.min(Nh[ii][Nh[0].length-1]*vf.get(vf.size()-1), qmax.get(qmax.size()-1));
 			

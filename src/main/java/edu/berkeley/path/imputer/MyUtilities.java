@@ -93,7 +93,7 @@ public class MyUtilities {
 		// evaluate the resulting interpolation function at the interpolationPoints
 		PolynomialFunction[] functions = resultFunctionSet.getPolynomials();
 		double[] knots = resultFunctionSet.getKnots();
-		double[] evaluationPoints = MyUtilities.createIncrementVector(0,(double) vector.length-1,(double) vector.length/(newsize+1));
+		double[] evaluationPoints = MyUtilities.createIncrementVector(0,(double) vector.length-1,(double) (vector.length-1)/(newsize-1));
 		for (int k = 0;k<evaluationPoints.length;k++){
 			// determine which function to use (i.e. in which knot interval is the current evaluation point)
 			int m;
@@ -269,7 +269,7 @@ public class MyUtilities {
 	public static double[] meanColumns(double[][] M){
 		double[] out = new double[M[0].length];
 		for (int i=0;i<M[0].length;i++){
-			out[i] = meanVector(fetchColumn(M,i+1));
+			out[i] = meanVector(fetchColumn(M,i));
 		}
 		return out;
 	}	
@@ -278,7 +278,7 @@ public class MyUtilities {
 	public static double[] fetchRow(double[][] matrix, int rowIndex){
 		double[] out = new double[matrix.length];
 		for (int i=0;i<matrix[0].length;i++){
-			out[i] = matrix[rowIndex-1][i];
+			out[i] = matrix[rowIndex][i];
 		}
 		return out;
 	}

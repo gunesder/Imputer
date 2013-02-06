@@ -26,10 +26,16 @@ public class FDParameters {
 	public void setFD(double vf,double w,double q_max){
 	if(!Double.isNaN(vf))
 		this.vf = vf;
+	else
+		this.vf = FDParameters.nom_vf;
 	if(!Double.isNaN(w))
 		this.w = w;
+	else
+		this.w  = FDParameters.nom_w;
 	if(!Double.isNaN(q_max))
 		this.q_max = q_max;
+	else
+		this.q_max = FDParameters.nom_q_max;
 	}
 	
 	public double getVf() {
