@@ -347,6 +347,48 @@ public class Imputer {
 								
 	}
 	
+	public void exportMainlineDataToText() throws IOException{
+		
+		for (int key: detectors.keySet()){
+			
+			double[] flow = MyUtilities.scaleVector(detectors.get(key).getFlowDataArray(),detectors.get(key).getNumberOfLanes());
+			double[] speed = detectors.get(key).getSpeedDataArray();
+			double[] density = MyUtilities.scaleVector(detectors.get(key).getDensityDataArray(),detectors.get(key).getNumberOfLanes());
+			
+			PrintWriter outFlow = new PrintWriter(new FileWriter(key + "_flw.txt"));
+			PrintWriter outSpeed = new PrintWriter(new FileWriter(key + "_spd.txt"));
+			PrintWriter outDensity = new PrintWriter(new FileWriter(key + "_dty.txt"));
+			
+			for (int i=0;i<flow.length;i++){
+				
+				outFlow.println(flow[i]);
+				outSpeed.println(speed[i]);
+				outDensity.println(density[i]);
+				
+			}
+			
+			outFlow.close();
+			outSpeed.close();
+			outDensity.close();
+			
+		}
+		
+	}
+	
+	public void exportDetectors() throws IOException { // doesn't work, remove when done
+		
+		for (int key: detectors.keySet()){
+			
+			Detector d = detectors.get(key);
+			FileOutputStream fileOut = new FileOutputStream("Detector " + key + ".ser");
+		    ObjectOutputStream out = new ObjectOutputStream(fileOut);
+		    out.writeObject(d);
+		    out.close();
+		    fileOut.close();
+		          
+		}
+	}
+	
 	/**
 	 * Calibrates fundamental diagram parameters for detectors
 	 */

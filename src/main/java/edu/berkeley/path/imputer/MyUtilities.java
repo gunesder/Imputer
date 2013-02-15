@@ -276,11 +276,211 @@ public class MyUtilities {
 	
 	// Fetch row from Matrix
 	public static double[] fetchRow(double[][] matrix, int rowIndex){
-		double[] out = new double[matrix.length];
+		double[] out = new double[matrix[0].length];
 		for (int i=0;i<matrix[0].length;i++){
 			out[i] = matrix[rowIndex][i];
 		}
 		return out;
 	}
+	
+	// Savitzky - Golay smoothing (can overload with other smoothing algorithms if required)
+	public static double[] smoothFWM(double[] data, int f, int k){
+		
+		/* (x,y) are given data. f is the frame length to be taken, should
+		be an odd number. k is the degree of polynomial filter. It should
+		be less than f.
+
+		Reference: Orfanidis, S.J., Introduction to Signal Processing,
+		Prentice-Hall, Englewood Cliffs, NJ, 1996. */
+		
+		double[] x = MyUtilities.createIncrementVector(1, 288, 1);
+		int n = x.length;
+		f = (int) Math.floor(f);
+		f = Math.min(f, n);
+		f = f - (f-1)%2; // will subtract 1 if frame is even.
+		double[] diffx = MyUtilities.onesVector(n-1);
+		// skipping checks for NaNs and Nulls in the data. Also skipping check if span is less than degree
+		
+		int hf = (f-1)/2; // half frame length
+		
+		double[][] v = MyUtilities.zerosMatrix(f, k);
+		for (int i=0;i<v.length;i++){
+			for (int j=0;j<v[0].length;j++){
+				v[i][j]++;
+			}
+		}
+		
+		double[] t = MyUtilities.createIncrementVector(-hf, hf, 1);
+		double[] dummy = new double[t.length];
+		for (int i=0;i<k;i++){
+			
+			dummy = MyUtilities.onesVector(dummy.length);
+			for (int j=0;j<dummy.length;j++){
+				dummy[j] = Math.pow(t[j],(i+1));
+			}
+		
+			MyUtilities.assignColumn(v, dummy, i);
+		}
+		
+		QRDecomposer decomposer = new QRDecomposer(v);
+		double[][] q = decomposer.getQ();
+		
+		double[][] dummy1 = new double[2][1]; // this is my ad hoc way of defining vectors as 2d arrays. This is a bit of a hack to conform with the matrix multiplication code I took off the web. 
+		dummy1[0] = MyUtilities.fetchRow(q, hf);
+		dummy1 = MyUtilities.multiplyMatrices(q, dummy1);
+		
+		// ymid
+		double[] b = dummy1[0];
+		double[] a = {1};
+		double[] ymid = MyUtilities.filter(b, a, data);
+		
+		// ybegin
+		double[][] dummy2 = new double[hf][q[0].length];
+		for (int i=0;i<dummy2.length;i++){
+			dummy2[i] = MyUtilities.fetchRow(q, i);
+		}
+		
+		double[][] dummy3 = MyUtilities.multiplyMatrices(dummy2, MyUtilities.transposeMatrix(q));
+		double[][] ybegin = new double[2][1];
+		ybegin[0] = new double[f];
+		for (int i=0;i<ybegin[0].length;i++){
+			ybegin[0][i] = data[i];
+		}
+		ybegin = MyUtilities.multiplyMatrices(dummy3, ybegin);
+		
+		// yend
+		double[][] dummy4 = new double[hf][q[0].length];
+		for (int i=hf+1;i<q.length;i++){
+			dummy4 = MyUtilities.assignRow(dummy4, MyUtilities.fetchRow(q, i), i-hf-1);
+		}
+		double[][] dummy5 = MyUtilities.multiplyMatrices(dummy4, MyUtilities.transposeMatrix(q));
+		double[][] yend = new double[2][1];
+		yend[0] = new double[f];
+		for (int i=data.length-f;i<data.length;i++){
+			yend[0][i-(data.length-f)] = data[i];
+		}
+		yend = MyUtilities.multiplyMatrices(dummy5, yend);
+		
+		// putting the y's together for the output
+		double[] out = new double[data.length];
+		for (int i=0;i<out.length;i++){
+			if (i<ybegin.length){
+				out[i] = ybegin[i][0];
+			} else if (i>out.length-yend.length){
+				out[i] = yend[i][0];
+			} else {
+				out[i] = ymid[i];
+			}
+		}
+		return out;		
+	
+		// non-uniform x is ignored because it's never necessary for the cases needed for imputation
+		
+	}
+	
+	// implementation of the Matlab filter function
+	public static double[] filter(double[] b, double[] a, double[] data){
+		
+		/* b is the vector of coefficients of the feedforward filter and a is the 
+		 * vector of coefficients for the feedback filter. Refer to Matlab documentation 
+		 * for the function "filter" for further detail.
+		 * 
+		 * Reference:  Oppenheim, A. V. and R.W. Schafer. Discrete-Time Signal Processing,
+		 * Englewood Cliffs, NJ: Prentice-Hall, 1989, pp. 311-312. */
+		
+		double[] out = new double[data.length];
+		
+		for (int i=0;i<data.length;i++){
+			// discrete time filtering, difference equation consists of feedforward terms - feedback terms.
+			
+			// positive term (feedforward):
+			double posTerm = 0;
+			int k = i;
+			for (int j=0;j<b.length;j++){
+				if (k>=0){
+					posTerm += b[j]*data[k];
+					k--;
+				} else {
+					break;
+				}
+			}
+			
+			// negative term (feedback):
+			double negTerm = 0;
+			if (a.length>1){
+				k = i-1;
+				for (int j=1;j<a.length;j++){
+					if (k>=0){
+						negTerm += a[j]*data[k];
+						k--;
+					} else {
+						break;
+					}
+				}
+			}
+			
+			out[i] = posTerm - negTerm;
+			
+			
+		}
+		
+		return out;
+		
+	}
+	
+	// Matrix multiplication
+	public static double[][] multiplyMatrices(double a[][], double b[][]) {
+		   
+		int aRows = a.length, aColumns = a[0].length, bRows = b.length, bColumns = b[0].length;
+		
+		// modify dimensions for vector inputs disguised as 2d arrays
+		// a is a row vector:
+		if (a[0].length>a[1].length){
+			aColumns = Math.max(aRows, aColumns);
+			aRows = 1;
+		}
+		// b is a column vector
+		if (b[0].length>b[1].length){
+			bRows = Math.max(bRows, bColumns);
+			bColumns = 1;
+			double[][] dummy = new double[b[0].length][1]; 
+			for (int i=0;i<b[0].length;i++){
+				dummy[i][0] = b[0][i];
+			}
+			b = dummy;
+		}
+		
+		   
+		if ( aColumns != bRows ) {
+			throw new IllegalArgumentException("A:Rows: " + aColumns + " did not match B:Columns " + bRows + ".");
+		}
+		   
+		double[][] result = new double[aRows][bColumns];
+		   
+		for(int i = 0; i < aRows; i++) { // aRow
+			for(int j = 0; j < bColumns; j++) { // bColumn
+				for(int k = 0; k < aColumns; k++) { // aColumn
+					result[i][j] += a[i][k] * b[k][j];
+		        }
+		    }  
+		}
+		   
+		return result;
+	}
+	
+	// Matrix transpose
+	public static double[][] transposeMatrix(double[][] A){
+		
+		double[][] out = new double[A[0].length][A.length];
+		
+		for (int i = 0;i<out.length;i++){
+			out[i] = MyUtilities.fetchColumn(A, i);
+		}
+		
+		return out;
+		
+	}
+		
+	
 
 }

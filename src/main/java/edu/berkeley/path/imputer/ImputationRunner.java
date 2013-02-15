@@ -1,6 +1,7 @@
 package edu.berkeley.path.imputer;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
 
@@ -22,7 +23,7 @@ public class ImputationRunner
 	public static final String inputFileName = "C:\\Users\\gsr04\\Workspace\\imputer\\NetworkAConfig_NE.xml";
 	public static final String outputFileName = "C:\\Users\\gsr04\\Workspace\\imputer\\NetworkAConfig_NE_out.xml";
 	
-    public static void main ( String[] args ) throws JAXBException, FileNotFoundException, SiriusException, DatabaseException
+    public static void main ( String[] args ) throws JAXBException, SiriusException, DatabaseException, IOException
     {
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();
@@ -31,6 +32,8 @@ public class ImputationRunner
     	imp.createLinkStructureFromMainScenario();
     	imp.createMainlineLinkStructureFromMainScenario();
     	imp.readDataIntoDetectorListFromDatabase();
+    	// imp.exportMainlineDataToText();
+    	// imp.exportDetectors();
     	imp.calibrateFundemantalDiagrams();
     	imp.createCellStructure();
     	imp.runImputation();

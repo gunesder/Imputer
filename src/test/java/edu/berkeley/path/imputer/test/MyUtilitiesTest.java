@@ -120,5 +120,13 @@ public class MyUtilitiesTest extends TestCase {
 		double[][] expected = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
 		assertTrue(MyUtilities.compareDoubleMatrices(expected, MyUtilities.matrixAbsValue(input)));		
 	}
+	
+	public void testFilter(){
+		double[] x = MyUtilities.createIncrementVector(1, 4, 0.2);
+		double[] b = MyUtilities.scaleVector(MyUtilities.onesVector(5), 0.2);
+		double[] a = {1};
+		double[] expected = {0.2,0.44,0.72,1.04,1.4,1.6,1.8,2.0,2.2,2.4,2.6,2.8,3.0,3.2,3.4,3.6};
+		assertTrue(MyUtilities.compareDoubleArrays(expected, MyUtilities.filter(b, a, x)));
+	}
 
 }

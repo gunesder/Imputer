@@ -1,8 +1,9 @@
 package edu.berkeley.path.imputer;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Detector {
+public class Detector implements Serializable{
 	
 	// fields
 	private FDParameters fdParams = new FDParameters();
@@ -170,5 +171,24 @@ public class Detector {
 	public void addDatumToFlow(double x){
 		this.flowData.add(x);
 	}
+	
+	public double[] getSmoothedDataArray(String str) {
+		Double[] d = new Double[speedData.size()];
+		if (str.equals("speed")){
+			d = speedData.toArray(new Double[speedData.size()]);
+		} else if (str.equals("flow")){
+			d = flowData.toArray(new Double[flowData.size()]);
+		} else if (str.equals("density")){
+			d = densityData.toArray(new Double[densityData.size()]);
+		} else {
+			throw new IllegalArgumentException("Illegal data retrieval");
+		}
+		double[] dd = new double[d.length];
+		for(int i=0;i<d.length;i++){  
+			 dd[i] = d[i].doubleValue();  
+		}  
+		dd = MyUtilities.smoothFWM(dd, 11, 2);
+		return dd;
+	}		
 	
 }
