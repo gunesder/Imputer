@@ -8,5 +8,6 @@
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER"/>
 	<classpathentry kind="src" path="/beats"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/scenario-database-access"/>
+	<classpathentry kind="lib" path="C:/Users/gsr04/Downloads/jexcelapi_2_6_12/jexcelapi/jxl.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

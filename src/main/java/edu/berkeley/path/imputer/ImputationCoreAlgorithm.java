@@ -1,9 +1,14 @@
 package edu.berkeley.path.imputer;
 
+import java.io.IOException;
 import java.util.*;
+
+import jxl.read.biff.BiffException;
 
 import lpsolve.LpSolve;
 import lpsolve.LpSolveException;
+
+
 
 public class ImputationCoreAlgorithm {
 	
@@ -92,6 +97,17 @@ public class ImputationCoreAlgorithm {
 			// Lanes
 			lane.add(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV());
 			
+			// Flow Measurements
+			if (separateHOV){
+				double[] tempFLW_ML = c.getDetectorML().getSmoothedDataArray("flow");
+				double[] tempFLW_HOV = c.getDetectorHOV().getSmoothedDataArray("flow");
+				double[] tempFLW = MyUtilities.addVectors(tempFLW_ML,tempFLW_HOV);
+				tempFLW = MyUtilities.scaleVector(tempFLW,this.simulationTimeStep*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
+				measuredFlow = MyUtilities.assignColumn(measuredFlow, tempFLW, i);
+			} else {
+				measuredFlow = MyUtilities.assignColumn(measuredFlow, MyUtilities.scaleVector(c.getDetectorML().getSmoothedDataArray("flow"),this.simulationTimeStep*c.getLinks().getFirst().getLanesML()), i);
+			}
+			
 			// Speed Measurements
 			if (separateHOV){
 				double[] tempSPD_ML = c.getDetectorML().getSmoothedDataArray("speed");
@@ -113,17 +129,6 @@ public class ImputationCoreAlgorithm {
 				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(tempDTY,dummyLength*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV())), i);
 			} else {
 				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(c.getDetectorML().getSmoothedDataArray("density"),dummyLength*c.getLinks().getFirst().getLanesML()), i);
-			}
-			
-			// Flow Measurements
-			if (separateHOV){
-				double[] tempFLW_ML = c.getDetectorML().getSmoothedDataArray("flow");
-				double[] tempFLW_HOV = c.getDetectorHOV().getSmoothedDataArray("flow");
-				double[] tempFLW = MyUtilities.addVectors(tempFLW_ML,tempFLW_HOV);
-				tempFLW = MyUtilities.scaleVector(tempFLW,this.simulationTimeStep*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
-				measuredFlow = MyUtilities.assignColumn(measuredFlow, tempFLW, i);
-			} else {
-				measuredFlow = MyUtilities.assignColumn(measuredFlow, MyUtilities.scaleVector(c.getDetectorML().getSmoothedDataArray("flow"),this.simulationTimeStep*c.getLinks().getFirst().getLanesML()), i);
 			}
 			
 			// Fundamental Diagram Parameters
@@ -200,6 +205,42 @@ public class ImputationCoreAlgorithm {
 		measuredDensity = MyUtilities.interpolateMatrix(measuredDensity,(int) (24/this.simulationTimeStep));
 		measuredOrFlow = MyUtilities.interpolateMatrix(measuredOrFlow,(int) (24/this.simulationTimeStep));
 		measuredFrFlow = MyUtilities.interpolateMatrix(measuredFrFlow,(int) (24/this.simulationTimeStep));
+		
+		// manually fixing FDparams for testing purposes:
+		qmax.clear();
+		qmax.add(7.6575);
+		qmax.add(7.4796);
+		qmax.add(7.3884);
+		
+		vf.clear();
+		vf.add(0.3158);
+		vf.add(0.1363);
+		vf.add(0.1150);
+		
+		w.clear();
+		w.add(0.0411);
+		w.add(0.0272);
+		w.add(0.0224);
+		
+		rhojam.clear();
+		rhojam.add(210.6119);
+		rhojam.add(330.1817);
+		rhojam.add(393.6067);
+		
+		// loading and fixing interpolated measurements from text files (exported from matlab)
+		try {
+			measuredSpeed = MyUtilities.read2DArrayFromExcel("C:\\Users\\gsr04\\Workspace\\imputer\\Speed.xls");
+			measuredFlow = MyUtilities.read2DArrayFromExcel("C:\\Users\\gsr04\\Workspace\\imputer\\Flow.xls");
+			measuredDensity = MyUtilities.read2DArrayFromExcel("C:\\Users\\gsr04\\Workspace\\imputer\\Density.xls");
+		} catch (BiffException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		
 		
 		// variables needed for the downstream boundary congested case (line 126 of matlab code)
 		double[] boundaryVelocity = MyUtilities.fetchColumn(measuredSpeed, measuredSpeed[0].length-1);
@@ -467,7 +508,7 @@ public class ImputationCoreAlgorithm {
 		double percTol2 = 0.2;
 		int maxLim = 100;
 		int iterMax = 25;
-		int[] iterTrigger = {5,9,12,16,20}; // iteration indices when the trigger algorithm kicks in
+		int[] iterTrigger = {4,8,11,15,19}; // iteration indices when the trigger algorithm kicks in
 		double derivativeBound = 2;
 		double startBound = 1;
 		
@@ -845,7 +886,8 @@ public class ImputationCoreAlgorithm {
 					}
 					
 					// Term II, Part 2 (ones(size(Mode,1),1)*[0 Impute(1:end-1)]==0)
-					ArrayList<Boolean> dummyImpute = impute;
+					ArrayList<Boolean> dummyImpute = new ArrayList<Boolean>();
+					dummyImpute = (ArrayList<Boolean>) impute.clone();
 					dummyImpute.remove(dummyImpute.size()-1);
 					dummyImpute.add(0, false);
 					
@@ -900,7 +942,8 @@ public class ImputationCoreAlgorithm {
 					}
 					
 					// Term III, Part 2
-					ArrayList<Boolean> dummyImpute2 = impute;
+					ArrayList<Boolean> dummyImpute2 = new ArrayList<Boolean>();
+					dummyImpute2 = (ArrayList<Boolean>) impute.clone();
 					dummyImpute2.remove(dummyImpute2.size()-1);
 					dummyImpute2.add(dummyImpute2.size()-1, false);
 					Boolean[] dummyImputeArray2 = dummyImpute2.toArray(new Boolean[dummyImpute2.size()]);
@@ -965,7 +1008,8 @@ public class ImputationCoreAlgorithm {
 					}
 					
 					// Term II, Part 2 (ones(size(Mode,1),1)*[0 Impute(1:end-1)]==0)
-					ArrayList<Boolean> dummyImpute = impute;
+					ArrayList<Boolean> dummyImpute = new ArrayList<Boolean>();
+					dummyImpute = (ArrayList<Boolean>) impute.clone();
 					dummyImpute.add(0, false);
 					Boolean[] dummyImputeArray = dummyImpute.toArray(new Boolean[dummyImpute.size()]);
 					boolean[][] term2part2 = new boolean[mode.length][mode[0].length];
@@ -1018,7 +1062,8 @@ public class ImputationCoreAlgorithm {
 					}
 					
 					// Term III, Part 2
-					ArrayList<Boolean> dummyImpute2 = impute;
+					ArrayList<Boolean> dummyImpute2 = new ArrayList<Boolean>();
+					dummyImpute2 = (ArrayList<Boolean>) impute.clone();
 					dummyImpute2.add(dummyImpute2.size()-1, false);
 					Boolean[] dummyImputeArray2 = dummyImpute2.toArray(new Boolean[dummyImpute2.size()]);
 					boolean[][] term3part2 = new boolean[mode.length][mode[0].length];
@@ -1122,7 +1167,8 @@ public class ImputationCoreAlgorithm {
 				
 				for (int row=0;row<rowIndeces2.size();row++){
 					if (impute.get(colIndeces2.get(row))){
-						limitNew = Math.min(qmax.get(colIndeces.get(row)), w.get(colIndeces.get(row))*(rhojam.get(colIndeces.get(row)) - Nh[rowIndeces.get(row)][colIndeces.get(row)]))*(1-percTol2);
+						limitNew = Math.min(qmax.get(colIndeces2.get(row)), w.get(colIndeces2.get(row))*(rhojam.get(colIndeces2.get(row)) - Nh[rowIndeces2.get(row)][colIndeces2.get(row)]))*(1-percTol2);
+						c[rowIndeces2.get(row)][colIndeces2.get(row)-1] = limitNew;
 					}
 				}
 				
@@ -1412,7 +1458,13 @@ public class ImputationCoreAlgorithm {
 				
 			} // line 842
 		
-		// skip lines 844,845 (messages to the user)
+		double[][] dummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh, -1));
+		dummy1 = MyUtilities.matrixAbsValue(dummy1);
+		double[] dummy2 = MyUtilities.meanColumns(dummy1);
+		double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
+		double dummy4 = MyUtilities.meanVector(dummy2)/MyUtilities.meanVector(dummy3);
+		
+		System.out.println(" Final Density Error: " + dummy4*100);
 		
 		// *********************************************************************************************
 		// ******* Check Onramp flows calculated in the previous section *******************************

@@ -327,28 +327,28 @@
 		<dynamics type="CTM"/>
         
       </link>
-      <link lanes="4" length="0.14341687466199454" type="freeway" id="-32593704">
+      <link lanes="5" length="0.14341687466199454" type="freeway" id="-32593704">
         
         <begin node_id="-32593704"/>
         <end node_id="-32593705"/>
 		<dynamics type="CTM"/>
         
       </link>
-      <link lanes="4" length="0.15751972806439635" type="freeway" id="-32593705">
+      <link lanes="5" length="0.15751972806439635" type="freeway" id="-32593705">
         
         <begin node_id="-32593705"/>
         <end node_id="-136209"/>
 		<dynamics type="CTM"/>
         
       </link>
-      <link lanes="4" length="0.11676452538526748" type="freeway" id="-26638401">
+      <link lanes="5" length="0.11676452538526748" type="freeway" id="-26638401">
         
         <begin node_id="-26638401"/>
         <end node_id="-26638402"/>
 		<dynamics type="CTM"/>
         
       </link>
-      <link lanes="4" length="0.07028073370125713" type="freeway" id="-26638402">
+      <link lanes="5" length="0.07028073370125713" type="freeway" id="-26638402">
         
         <begin node_id="-26638402"/>
         <end node_id="-40441"/>
@@ -369,7 +369,7 @@
         <dynamics type="CTM"/>
         
       </link>
-      <link lanes="4" length="0.15561011646391817" type="freeway" id="-1">
+      <link lanes="5" length="0.15561011646391817" type="freeway" id="-1">
         
         <begin node_id="-136209"/>
         <end node_id="-26638401"/>

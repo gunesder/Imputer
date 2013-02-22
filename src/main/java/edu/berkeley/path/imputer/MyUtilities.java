@@ -6,7 +6,14 @@ import org.apache.commons.math.analysis.polynomials.PolynomialSplineFunction;
 
 import scala.actors.threadpool.Arrays;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.*;
+import java.util.ArrayList;
+
+import jxl.NumberCell;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
 
 public class MyUtilities {
 	
@@ -16,10 +23,11 @@ public class MyUtilities {
 	
 	// Scale Vector
 	public static double[] scaleVector(double[] d, double s){
+		double[] out = new double[d.length];
 		for (int k=0;k<d.length;k++){
-			d[k]*=s;			
+			out[k] = d[k]*s;			
 		}
-		return d;
+		return out;
 	}
 	
 	// Scale Matrix
@@ -213,7 +221,23 @@ public class MyUtilities {
 		return out;
 	}	
 	
+	// vector mean
+	public static double meanVector(double[] v){
+		double sum = 0;
+		for (int i=0;i<v.length;i++){
+			sum += v[i];
+		}
+		return sum / v.length;
+	}
 	
+	// matrix columnwise means
+	public static double[] meanColumns(double[][] M){
+		double[] out = new double[M[0].length];
+		for (int i=0;i<M[0].length;i++){
+			out[i] = meanVector(fetchColumn(M,i));
+		}
+		return out;
+	}	
 	
 	// TODO: Write tests for the methods below this
 	// create vector of ones
@@ -256,24 +280,6 @@ public class MyUtilities {
 		return out;
 	}
 	
-	// vector mean
-	public static double meanVector(double[] v){
-		double sum = 0;
-		for (int i=0;i<v.length;i++){
-			sum += v[i];
-		}
-		return sum / v.length;
-	}
-	
-	// matrix columnwise means
-	public static double[] meanColumns(double[][] M){
-		double[] out = new double[M[0].length];
-		for (int i=0;i<M[0].length;i++){
-			out[i] = meanVector(fetchColumn(M,i));
-		}
-		return out;
-	}	
-	
 	// Fetch row from Matrix
 	public static double[] fetchRow(double[][] matrix, int rowIndex){
 		double[] out = new double[matrix[0].length];
@@ -293,7 +299,7 @@ public class MyUtilities {
 		Reference: Orfanidis, S.J., Introduction to Signal Processing,
 		Prentice-Hall, Englewood Cliffs, NJ, 1996. */
 		
-		double[] x = MyUtilities.createIncrementVector(1, 288, 1);
+		double[] x = MyUtilities.createIncrementVector(1, data.length, 1);
 		int n = x.length;
 		f = (int) Math.floor(f);
 		f = Math.min(f, n);
@@ -303,7 +309,7 @@ public class MyUtilities {
 		
 		int hf = (f-1)/2; // half frame length
 		
-		double[][] v = MyUtilities.zerosMatrix(f, k);
+		double[][] v = MyUtilities.zerosMatrix(f, k+1);
 		for (int i=0;i<v.length;i++){
 			for (int j=0;j<v[0].length;j++){
 				v[i][j]++;
@@ -312,11 +318,11 @@ public class MyUtilities {
 		
 		double[] t = MyUtilities.createIncrementVector(-hf, hf, 1);
 		double[] dummy = new double[t.length];
-		for (int i=0;i<k;i++){
+		for (int i=0;i<k+1;i++){
 			
 			dummy = MyUtilities.onesVector(dummy.length);
 			for (int j=0;j<dummy.length;j++){
-				dummy[j] = Math.pow(t[j],(i+1));
+				dummy[j] = Math.pow(t[j],i);
 			}
 		
 			MyUtilities.assignColumn(v, dummy, i);
@@ -330,7 +336,7 @@ public class MyUtilities {
 		dummy1 = MyUtilities.multiplyMatrices(q, dummy1);
 		
 		// ymid
-		double[] b = dummy1[0];
+		double[] b = MyUtilities.fetchColumn(dummy1, 0);
 		double[] a = {1};
 		double[] ymid = MyUtilities.filter(b, a, data);
 		
@@ -366,8 +372,8 @@ public class MyUtilities {
 		for (int i=0;i<out.length;i++){
 			if (i<ybegin.length){
 				out[i] = ybegin[i][0];
-			} else if (i>out.length-yend.length){
-				out[i] = yend[i][0];
+			} else if (i>=out.length-yend.length){
+				out[i] = yend[i-(out.length-yend.length)][0];
 			} else {
 				out[i] = ymid[i];
 			}
@@ -478,6 +484,21 @@ public class MyUtilities {
 		}
 		
 		return out;
+		
+	}
+	
+	public static double[][] read2DArrayFromExcel(String filename) throws BiffException, IOException{
+		
+		Workbook workbook = Workbook.getWorkbook(new File(filename));
+		double[][] out = new double[workbook.getSheet(0).getRows()][workbook.getSheet(0).getColumns()];
+		for (int i=0;i<workbook.getSheet(0).getRows();i++){
+			for (int j=0;j<workbook.getSheet(0).getColumns();j++){
+				NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(j, i); 
+				out[i][j] = (double) nc.getValue();
+			}
+		}
+		
+		return out;	
 		
 	}
 		

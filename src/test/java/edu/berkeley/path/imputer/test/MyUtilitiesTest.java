@@ -128,5 +128,16 @@ public class MyUtilitiesTest extends TestCase {
 		double[] expected = {0.2,0.44,0.72,1.04,1.4,1.6,1.8,2.0,2.2,2.4,2.6,2.8,3.0,3.2,3.4,3.6};
 		assertTrue(MyUtilities.compareDoubleArrays(expected, MyUtilities.filter(b, a, x)));
 	}
+	
+	public void testMeanVector(){
+		double[] a = {-2.0,3.0,6.0,-18.0,72.0};
+		assertTrue(MyUtilities.meanVector(a) > 12.2-0.000001 && MyUtilities.meanVector(a) < 12.2+0.000001);
+	}
+	
+	public void testMeanColumns(){
+		double[][] input1 = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
+		double[] expected = {6.0,7.0,8.0,9.0,10.0};
+		assertTrue(MyUtilities.compareDoubleArrays(expected, MyUtilities.meanColumns(input1)));
+	}
 
 }
