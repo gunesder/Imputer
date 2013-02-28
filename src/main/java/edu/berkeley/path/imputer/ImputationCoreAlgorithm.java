@@ -16,8 +16,8 @@ public class ImputationCoreAlgorithm {
 		// primary fields
 		private LinkedList<Cell> cellData = new LinkedList<Cell>();
 		private HashMap<Integer,Detector> detectorList = new HashMap<Integer,Detector>();
-		private double demandTimeStep = 5.0/60.0; // [hours] 5 minute default
-		private double simulationTimeStep = 5.0/60.0/60.0; // [hours] 5 second default
+		private Double demandTimeStep = 5.0/60.0; // [hours] 5 minute default
+		private Double simulationTimeStep = 5.0/60.0/60.0; // [hours] 5 second default
 		private boolean downBoundaryCongested = false;
 		// derived fields (vector quantities)
 		private ArrayList<Double> linkLength = new ArrayList<Double>();
@@ -33,11 +33,11 @@ public class ImputationCoreAlgorithm {
 		private ArrayList<Boolean> orPresent = new ArrayList<Boolean>();
 		private ArrayList<Boolean> frPresent = new ArrayList<Boolean>();
 		// derived fields (matrix quantities)
-		private double[][] measuredDensity = new double[289][1];
-		private double[][] measuredFlow = new double[289][1];
-		private double[][] measuredSpeed = new double[289][1];
-		private double[][] measuredOrFlow = new double[289][1];
-		private double[][] measuredFrFlow = new double[289][1];		
+		private Double[][] measuredDensity = new Double[289][1];
+		private Double[][] measuredFlow = new Double[289][1];
+		private Double[][] measuredSpeed = new Double[289][1];
+		private Double[][] measuredOrFlow = new Double[289][1];
+		private Double[][] measuredFrFlow = new Double[289][1];		
 		// learning algorithm parameters
 	
 	// getters and setters
@@ -57,7 +57,7 @@ public class ImputationCoreAlgorithm {
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, double simTimeStep){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, Double simTimeStep){
 		this.cellData = cells;
 		this.detectorList = detectors;
 		this.downBoundaryCongested = flwBoundary;
@@ -65,7 +65,7 @@ public class ImputationCoreAlgorithm {
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, double simTimeStep, double demTimeStep){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, Double simTimeStep, Double demTimeStep){
 		this.cellData = cells;
 		this.detectorList = detectors;
 		this.downBoundaryCongested = flwBoundary;
@@ -88,7 +88,7 @@ public class ImputationCoreAlgorithm {
 			boolean separateHOV = false;
 			if (c.getDetectorHOV() != null) separateHOV = true;
 			// Lengths
-			double dummyLength = 0;
+			Double dummyLength = 0.0;
 			for(Link l:c.getLinks()){
 				dummyLength = dummyLength + l.getLength();
 			}
@@ -99,9 +99,9 @@ public class ImputationCoreAlgorithm {
 			
 			// Flow Measurements
 			if (separateHOV){
-				double[] tempFLW_ML = c.getDetectorML().getSmoothedDataArray("flow");
-				double[] tempFLW_HOV = c.getDetectorHOV().getSmoothedDataArray("flow");
-				double[] tempFLW = MyUtilities.addVectors(tempFLW_ML,tempFLW_HOV);
+				Double[] tempFLW_ML = c.getDetectorML().getSmoothedDataArray("flow");
+				Double[] tempFLW_HOV = c.getDetectorHOV().getSmoothedDataArray("flow");
+				Double[] tempFLW = MyUtilities.addVectors(tempFLW_ML,tempFLW_HOV);
 				tempFLW = MyUtilities.scaleVector(tempFLW,this.simulationTimeStep*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
 				measuredFlow = MyUtilities.assignColumn(measuredFlow, tempFLW, i);
 			} else {
@@ -110,12 +110,12 @@ public class ImputationCoreAlgorithm {
 			
 			// Speed Measurements
 			if (separateHOV){
-				double[] tempSPD_ML = c.getDetectorML().getSmoothedDataArray("speed");
-				double[] tempSPD_HOV = c.getDetectorHOV().getSmoothedDataArray("speed");
-				tempSPD_ML = MyUtilities.scaleVector(tempSPD_ML,c.getLinks().getFirst().getLanesML());
-				tempSPD_HOV = MyUtilities.scaleVector(tempSPD_HOV,c.getLinks().getFirst().getLanesHOV());
-				double[] tempSPD = MyUtilities.addVectors(tempSPD_ML, tempSPD_HOV);
-				tempSPD = MyUtilities.scaleVector(tempSPD, 1/(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV()));
+				Double[] tempSPD_ML = c.getDetectorML().getSmoothedDataArray("speed");
+				Double[] tempSPD_HOV = c.getDetectorHOV().getSmoothedDataArray("speed");
+				tempSPD_ML = MyUtilities.scaleVector(tempSPD_ML,(double) c.getLinks().getFirst().getLanesML());
+				tempSPD_HOV = MyUtilities.scaleVector(tempSPD_HOV,(double) c.getLinks().getFirst().getLanesHOV());
+				Double[] tempSPD = MyUtilities.addVectors(tempSPD_ML, tempSPD_HOV);
+				tempSPD = MyUtilities.scaleVector(tempSPD, (double) (1/(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV())));
 				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, tempSPD, i);
 			} else {
 				measuredSpeed = MyUtilities.assignColumn(measuredSpeed, c.getDetectorML().getSmoothedDataArray("speed"), i);
@@ -123,9 +123,9 @@ public class ImputationCoreAlgorithm {
 			
 			// Density Measurements
 			if (separateHOV){
-				double[] tempDTY_ML = c.getDetectorML().getSmoothedDataArray("density");
-				double[] tempDTY_HOV = c.getDetectorHOV().getSmoothedDataArray("density");
-				double[] tempDTY = MyUtilities.addVectors(tempDTY_ML,tempDTY_HOV);
+				Double[] tempDTY_ML = c.getDetectorML().getSmoothedDataArray("density");
+				Double[] tempDTY_HOV = c.getDetectorHOV().getSmoothedDataArray("density");
+				Double[] tempDTY = MyUtilities.addVectors(tempDTY_ML,tempDTY_HOV);
 				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(tempDTY,dummyLength*(c.getLinks().getFirst().getLanesML()+c.getLinks().getFirst().getLanesHOV())), i);
 			} else {
 				measuredDensity = MyUtilities.assignColumn(measuredDensity, MyUtilities.scaleVector(c.getDetectorML().getSmoothedDataArray("density"),dummyLength*c.getLinks().getFirst().getLanesML()), i);
@@ -135,14 +135,14 @@ public class ImputationCoreAlgorithm {
 			if (separateHOV) { // case where HOV lane detection is separate
 				
 				// Mainline
-				double rhocrit_ML = c.getDetectorML().getFdParams().getRho_crit()*dummyLength;
-				double rhojam_ML = c.getDetectorML().getFdParams().getRho_jam()*dummyLength;
-				double qmax_ML = c.getDetectorML().getFdParams().getQ_max()*this.simulationTimeStep;
+				Double rhocrit_ML = c.getDetectorML().getFdParams().getRho_crit()*dummyLength;
+				Double rhojam_ML = c.getDetectorML().getFdParams().getRho_jam()*dummyLength;
+				Double qmax_ML = c.getDetectorML().getFdParams().getQ_max()*this.simulationTimeStep;
 				
 				// HOV
-				double rhocrit_HOV = c.getDetectorHOV().getFdParams().getRho_crit()*dummyLength;
-				double rhojam_HOV = c.getDetectorHOV().getFdParams().getRho_jam()*dummyLength;
-				double qmax_HOV = c.getDetectorHOV().getFdParams().getQ_max()*this.simulationTimeStep;
+				Double rhocrit_HOV = c.getDetectorHOV().getFdParams().getRho_crit()*dummyLength;
+				Double rhojam_HOV = c.getDetectorHOV().getFdParams().getRho_jam()*dummyLength;
+				Double qmax_HOV = c.getDetectorHOV().getFdParams().getQ_max()*this.simulationTimeStep;
 				
 				// Aggregate
 				vf.add((qmax_ML+qmax_HOV)/(rhocrit_ML+rhocrit_HOV));
@@ -160,10 +160,10 @@ public class ImputationCoreAlgorithm {
 			}
 			
 			// Known Ramp Flows
-			double[] dummyVector = MyUtilities.sumColumns(c.getMeasuredOnrampFlow());
+			Double[] dummyVector = MyUtilities.sumColumns(c.getMeasuredOnrampFlow());
 			measuredOrFlow = MyUtilities.assignColumn(measuredOrFlow, dummyVector, i);
 			
-			double[] dummyVector2 = MyUtilities.sumColumns(c.getMeasuredOfframpFlow());
+			Double[] dummyVector2 = MyUtilities.sumColumns(c.getMeasuredOfframpFlow());
 			measuredFrFlow = MyUtilities.assignColumn(measuredFrFlow, dummyVector2, i);
 			
 			// Ramps present and need imputation boolean vectors
@@ -243,12 +243,12 @@ public class ImputationCoreAlgorithm {
 		
 		
 		// variables needed for the downstream boundary congested case (line 126 of matlab code)
-		double[] boundaryVelocity = MyUtilities.fetchColumn(measuredSpeed, measuredSpeed[0].length-1);
-		double boundaryVF = this.vf.get(this.vf.size()-1)*this.linkLength.get(this.linkLength.size()-1)/this.simulationTimeStep; 
+		Double[] boundaryVelocity = MyUtilities.fetchColumn(measuredSpeed, measuredSpeed[0].length-1);
+		Double boundaryVF = this.vf.get(this.vf.size()-1)*this.linkLength.get(this.linkLength.size()-1)/this.simulationTimeStep; 
 		
 		// additional post-processing of variables (line 165 of matlab code)
-		double[] orFLW_save = MyUtilities.fetchColumn(measuredOrFlow, 0);
-		double[] inputFLW = MyUtilities.addVectors(MyUtilities.fetchColumn(measuredFlow, 0),orFLW_save);
+		Double[] orFLW_save = MyUtilities.fetchColumn(measuredOrFlow, 0);
+		Double[] inputFLW = MyUtilities.addVectors(MyUtilities.fetchColumn(measuredFlow, 0),orFLW_save);
 		// skipped the assignment in line 169 of matlab
 		
 		// n'th cell offramp is paired with the n+1'th cell onramp at the node level. the following manipulations are made to take this into account
@@ -257,11 +257,11 @@ public class ImputationCoreAlgorithm {
 		orPresent.remove(0);
 		frPresent.remove(frPresent.size()-1);
 		
-		double[][] OrFlow = MyUtilities.removeColumn(measuredOrFlow, 0);
-		double[][] FrFlow = MyUtilities.removeColumn(measuredFrFlow, measuredFrFlow[0].length-1);
+		Double[][] OrFlow = MyUtilities.removeColumn(measuredOrFlow, 0);
+		Double[][] FrFlow = MyUtilities.removeColumn(measuredFrFlow, measuredFrFlow[0].length-1);
 		
-		double[][] orFlow_Giv = measuredOrFlow; // probably superfluous but keeping up with the matlab code for now
-		double[][] frFlow_Giv = measuredFrFlow; // probably superfluous but keeping up with the matlab code for now
+		Double[][] orFlow_Giv = measuredOrFlow; // probably superfluous but keeping up with the matlab code for now
+		Double[][] frFlow_Giv = measuredFrFlow; // probably superfluous but keeping up with the matlab code for now
 		
 		ArrayList<Boolean> impute = new ArrayList<Boolean>();
 		for (int j=0;j<imputeOR.size();j++){
@@ -270,17 +270,17 @@ public class ImputationCoreAlgorithm {
 		
 		int numberOfNodes = measuredDensity[0].length + 1;
 		
-		double[][] BETA = new double[FrFlow.length][FrFlow[0].length];
-		double[][] dj = new double[FrFlow.length][FrFlow[0].length];
-		double[] zeroVector = new double[FrFlow.length];
-		Arrays.fill(zeroVector, 0);
-		BETA = MyUtilities.appendColumn(BETA, zeroVector);
-		dj = MyUtilities.appendColumn(dj, zeroVector);
-		double[][] OrINP = new double[dj.length][dj[0].length];
-		double[] dprev = new double[numberOfNodes-2];
-		Arrays.fill(dprev, 0);
-		double[][] ErrA = new double[BETA.length][BETA[0].length];
-		double[][] ErrB = new double[BETA.length][BETA[0].length];
+		Double[][] BETA = new Double[FrFlow.length][FrFlow[0].length+1];
+		Double[][] dj = new Double[FrFlow.length][FrFlow[0].length+1];
+		BETA = MyUtilities.zerosMatrix(FrFlow.length,FrFlow[0].length+1);
+		dj = MyUtilities.zerosMatrix(FrFlow.length,FrFlow[0].length+1);
+		Double[][] OrINP = new Double[dj.length][dj[0].length];
+		Double[] dprev = new Double[numberOfNodes-2];
+		Arrays.fill(dprev, 0.0);
+		Double[][] ErrA = new Double[BETA.length][BETA[0].length];
+		Double[][] ErrB = new Double[BETA.length][BETA[0].length];
+		ErrA = MyUtilities.zerosMatrix(BETA.length, BETA[0].length);
+		ErrB = MyUtilities.zerosMatrix(BETA.length, BETA[0].length);
 		
 		// skipped line 198 for now
 		
@@ -288,27 +288,27 @@ public class ImputationCoreAlgorithm {
 		// ************** Derive dj and BETA from known ramp flows *************************************
 		// *********************************************************************************************
 		
-		double[] STime = MyUtilities.createIncrementVector(0, 24-this.simulationTimeStep, this.simulationTimeStep);
+		Double[] STime = MyUtilities.createIncrementVector(0.0, 24-this.simulationTimeStep, this.simulationTimeStep);
 		for (int ii=1;ii<STime.length;ii++){
 			
 			for (int j=0;j<numberOfNodes-2;j++){
 				
 				if (!impute.get(j)){
 					
-					 double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - measuredDensity[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
-					 double Term2 = this.qmax.get(j) < measuredDensity[ii][j]*this.vf.get(j) ? this.qmax.get(j) : measuredDensity[ii][j]*this.vf.get(j);
+					 Double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - measuredDensity[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
+					 Double Term2 = this.qmax.get(j) < measuredDensity[ii][j]*this.vf.get(j) ? this.qmax.get(j) : measuredDensity[ii][j]*this.vf.get(j);
 					 
-					 double r = OrFlow[ii][j];
-					 double s = FrFlow[ii][j] < Term2 ? FrFlow[ii][j] : Term2;
+					 Double r = OrFlow[ii][j];
+					 Double s = FrFlow[ii][j] < Term2 ? FrFlow[ii][j] : Term2;
 					 
 					 if (Term2+r-s>Term1){
 						 
-						 double a1 = Term1 - r;
-						 double a2 = Term2*r;
-						 double c1 = a2;
-						 double b1 = -s;
-						 double b2 = Term2*(Term1+s);
-						 double c2 = s*Term2;
+						 Double a1 = Term1 - r;
+						 Double a2 = Term2*r;
+						 Double c1 = a2;
+						 Double b1 = -s;
+						 Double b2 = Term2*(Term1+s);
+						 Double c2 = s*Term2;
 						 int[] colno = new int[4];
 				         double[] row = new double[4];
 						 					 
@@ -323,10 +323,10 @@ public class ImputationCoreAlgorithm {
 				            j = 0;
 
 				            colno[j] = 1; /* first column */
-				            row[j++] = -1;
+				            row[j++] = -1.0;
 
 				            colno[j] = 2; /* second column */
-				            row[j++] = 0;
+				            row[j++] = 0.0;
 				            
 				            colno[j] = 3; /* third column */
 				            row[j++] = a1;
@@ -467,7 +467,7 @@ public class ImputationCoreAlgorithm {
 						 
 					 } else {
 						dj[ii][j] = r;
-						dprev[j] = 0;
+						dprev[j] = 0.0;
 						OrINP[ii][j] = dj[ii][j] - dprev[j];
 						BETA[ii][j] = s/(0.0000000001 > Term2 ? 0.0000000001 : Term2);
 					 }
@@ -476,7 +476,7 @@ public class ImputationCoreAlgorithm {
 			}
 		}
 		
-		double[][] Demand = dj; 
+		Double[][] Demand = dj.clone(); 
 		
 		// *********************************************************************************************
 		// ************** Check that ramps are present whenever imputation is enabled ******************
@@ -501,26 +501,26 @@ public class ImputationCoreAlgorithm {
 		// *********************************************************************************************
 		
 		/* Learning algorithm front matter, gains, user-defined settings, etc. (hard coded for now) */
-		double GM = 40; // these are user-defined gains for the adaptive learning algorithm and are not necessarily all very sensitive
-		double G1 = 1*GM;
-		double G2 = 0.001*GM;
-		double percTol = 0.001;
-		double percTol2 = 0.2;
+		Double GM = 40.0; // these are user-defined gains for the adaptive learning algorithm and are not necessarily all very sensitive
+		Double G1 = 1*GM;
+		Double G2 = 0.001*GM;
+		Double percTol = 0.001;
+		Double percTol2 = 0.2;
 		int maxLim = 100;
 		int iterMax = 25;
 		int[] iterTrigger = {4,8,11,15,19}; // iteration indices when the trigger algorithm kicks in
-		double derivativeBound = 2;
-		double startBound = 0;
+		Double derivativeBound = 2.0;
+		Double startBound = 0.0;
 		
 		// initialize c: this is the effective demand vector into each cell
-		double[][] c = new double[STime.length][cellData.size()-1];
+		Double[][] c = new Double[STime.length][cellData.size()-1];
 		if (downBoundaryCongested){
-			c = new double[STime.length][cellData.size()];
+			c = new Double[STime.length][cellData.size()];
 		}
-		double[] dummy = new double[measuredDensity.length];
+		Double[] dummy = new Double[measuredDensity.length];
 		for (int j=1;j<numberOfNodes-1;j++){
 			dummy = MyUtilities.scaleVector(MyUtilities.onesVector(measuredDensity.length), rhojam.get(j));
-			dummy = MyUtilities.addVectors(dummy,MyUtilities.scaleVector(MyUtilities.fetchColumn(measuredDensity, j),-1));
+			dummy = MyUtilities.addVectors(dummy,MyUtilities.scaleVector(MyUtilities.fetchColumn(measuredDensity, j),-1.0));
 			c = MyUtilities.assignColumn(c, MyUtilities.scaleVector(dummy, 1.5*w.get(j)), j-1);
 		}
 		
@@ -529,28 +529,28 @@ public class ImputationCoreAlgorithm {
 			impute.add(true);
 		}
 		
-		double[][] cBest = c;
+		Double[][] cBest = c;
 		int iterBound_D_Beta = iterMax+1;
 		int startIterBound = 10;
 		
 		boolean[] flags = new boolean[numberOfNodes];
 		
 		// initialize csave: this is the effective demand vector arraylist for keeping track of the c matrix between iterations
-		LinkedList<double[][]> csave = new LinkedList<double[][]>();
+		LinkedList<Double[][]> csave = new LinkedList<Double[][]>();
 		LinkedList<Double> MError = new LinkedList<Double>(); 
-		double[][] Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] Nh = MyUtilities.zerosMatrix(STime.length, cellData.size());
 		
 		// Learning Algorithm Loop
 		for (int iter = 0;iter < iterMax;iter++){
 			
 			flags[0] = true;
 			
-			double[][] mode = MyUtilities.zerosMatrix(c.length, numberOfNodes-1);
+			Double[][] mode = MyUtilities.zerosMatrix(c.length, numberOfNodes-1);
 			
-			double InQ = 0;
+			Double InQ = 0.0;
 			Nh = MyUtilities.assignRow(Nh, measuredDensity[0], 0);
-			double[] cj = c[0];
-			double[] Limit = new double[cellData.size()];
+			Double[] cj = c[0];
+			Double[] Limit = new Double[cellData.size()];
 			
 			for (int k=0;k<STime.length-1;k++){ // starts at line 328 and ends at line 584
 				
@@ -558,13 +558,13 @@ public class ImputationCoreAlgorithm {
 					Limit[j] = qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j]);
 				}
 				
-				double[] cjprev = cj.clone();
+				Double[] cjprev = cj.clone();
 				cj = c[k];
 				
 				/* This whole section does what line 333 does in Matlab, may need to make into a utility method if it is needed somewhere else*/
-				double[] dummy1 = MyUtilities.subtractVectors(cjprev,MyUtilities.scaleVector(MyUtilities.onesVector(cjprev.length), derivativeBound));
-				double[] dummy2 = MyUtilities.addVectors(cjprev, MyUtilities.scaleVector(MyUtilities.onesVector(cjprev.length), derivativeBound));
-				double[] dummy3 = new double[cj.length];
+				Double[] dummy1 = MyUtilities.subtractVectors(cjprev,MyUtilities.scaleVector(MyUtilities.onesVector(cjprev.length), derivativeBound));
+				Double[] dummy2 = MyUtilities.addVectors(cjprev, MyUtilities.scaleVector(MyUtilities.onesVector(cjprev.length), derivativeBound));
+				Double[] dummy3 = new Double[cj.length];
 				
 				for (i=0;i<cj.length;i++){
 					dummy3[i] = cj[i] < dummy2[i] ? cj[i] : dummy2[i];
@@ -577,7 +577,7 @@ public class ImputationCoreAlgorithm {
 				
 				for (int j=0;j<numberOfNodes-2;j++){
 					
-					double NjVfj = qmax.get(j) < Nh[k][j]*vf.get(j) ? qmax.get(j) : Nh[k][j]*vf.get(j);
+					Double NjVfj = qmax.get(j) < Nh[k][j]*vf.get(j) ? qmax.get(j) : Nh[k][j]*vf.get(j);
 					
 					if(!impute.get(j)){
 						cj[j] = NjVfj*(1-BETA[k][j]) + Demand[k][j];
@@ -603,7 +603,7 @@ public class ImputationCoreAlgorithm {
 				flags[numberOfNodes-1] = false;
 				
 				InQ = InQ + inputFLW[k];
-				double inFlow = Limit[0] < InQ ? Limit[0] : InQ;
+				Double inFlow = Limit[0] < InQ ? Limit[0] : InQ;
 				InQ = InQ - inFlow;
 				
 				boolean needBoundaryImpute = downBoundaryCongested && (boundaryVelocity[k]<boundaryVF*0.9);
@@ -614,13 +614,13 @@ public class ImputationCoreAlgorithm {
 				int j=-1;
 				while (j<numberOfNodes-2){ // starts at line 374 and ends at line 580
 					j++;
-					double NjVfj = Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j);
-					double Njm1Vfjm1 = 0; // never used, just a workaround. It is assigned a new value for each node except for the first one, which doesn't undergo imputation anyway
+					Double NjVfj = Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j);
+					Double Njm1Vfjm1 = 0.0; // never used, just a workaround. It is assigned a new value for each node except for the first one, which doesn't undergo imputation anyway
 					if (j>=1){
 						Njm1Vfjm1 = qmax.get(j-1) < Nh[k][j-1]*vf.get(j-1) ? qmax.get(j-1) : Nh[k][j-1]*vf.get(j-1);	
 					}
-					double Wj = qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j]);
-					double Wjp1 = 0;
+					Double Wj = qmax.get(j) < w.get(j)*(rhojam.get(j)-Nh[k][j]) ? qmax.get(j) : w.get(j)*(rhojam.get(j)-Nh[k][j]);
+					Double Wjp1 = 0.0;
 					if (j == numberOfNodes-2){
 						Wjp1 = qmax.get(j);
 					} else {
@@ -628,20 +628,20 @@ public class ImputationCoreAlgorithm {
 					}
 					
 					if (!flags[j] && !flags[j+1]){ // starts at line 391 and ends at line 577
-						mode[k][j] = 1;
+						mode[k][j] = 1.0;
 						
-						double BoundL = lowerBounds.get(j-1);
-						double BoundU = upperBounds.get(j-1);
+						Double BoundL = lowerBounds.get(j-1);
+						Double BoundU = upperBounds.get(j-1);
 						
-						double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]-NjVfj+cj[j-1]);
-						double NHt = Nh0/(1+G1);
+						Double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]-NjVfj+cj[j-1]);
+						Double NHt = Nh0/(1+G1);
 						
 						if (impute.get(j-1)) { // Line 402 to 424
 							
 							cj[j-1] = cj[j-1] + G1*NHt;
 							
-							double UBound = 0;
-							double LBound = 0;
+							Double UBound = 0.0;
+							Double LBound = 0.0;
 							if (iter > iterBound_D_Beta){
 								UBound = Wj < Njm1Vfjm1 + maxD.get(j-1) ? Wj : Njm1Vfjm1 + maxD.get(j-1);
 								LBound = 0.01 > (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1))) ? 0.01 : (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1)));
@@ -669,7 +669,7 @@ public class ImputationCoreAlgorithm {
 						NHt = measuredDensity[k+1][j] - Nh[k+1][j];
 						
 					} else if (!flags[j] && flags[j+1]){
-						mode[k][j] = 2;
+						mode[k][j] = 2.0;
 						
 						if (impute.get(j) && cj[j] > Wjp1*(1+percTol) && cj[j] < Wjp1*(1+percTol) && (Nh[k][j]+cj[j-1]-NjVfj)>measuredDensity[k+1][j]){
 							cj[j] = cj[j] < Wjp1*(1-percTol/100) ? cj[j] : Wjp1*(1-percTol/100);
@@ -680,18 +680,18 @@ public class ImputationCoreAlgorithm {
 						
 						cj[j] = cj[j] > Wjp1 ? cj[j] : Wjp1;
 						
-						double BoundL1 = lowerBounds.get(j-1);
-						double BoundU1 = upperBounds.get(j-1);
-						double BoundL2 = lowerBounds.get(j);
-						double BoundU2 = upperBounds.get(j);
+						Double BoundL1 = lowerBounds.get(j-1);
+						Double BoundU1 = upperBounds.get(j-1);
+						Double BoundL2 = lowerBounds.get(j);
+						Double BoundU2 = upperBounds.get(j);
 						
-						double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+cj[j-1]-Wjp1*NjVfj/cj[j]);
-						double NHt = Nh0 / (1+G1*(impute.get(j-1) ? 1 : 0)+G2*Wjp1*NjVfj*(impute.get(j) ? 1 : 0));
+						Double Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+cj[j-1]-Wjp1*NjVfj/cj[j]);
+						Double NHt = Nh0 / (1+G1*(impute.get(j-1) ? 1 : 0)+G2*Wjp1*NjVfj*(impute.get(j) ? 1 : 0));
 						
 						if (impute.get(j)){
 							cj[j] = 1 / (1/cj[j]-(G2*NHt < 1/cj[j]*0.99 ? G2*NHt : 1/cj[j]*0.99));
 							
-							double UBound2 = 0;
+							Double UBound2 = 0.0;
 							if (BoundU2 != 0){
 								UBound2 =  (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) > 0.01 ? (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) : 0.01;
 							} else if (iter > iterBound_D_Beta){
@@ -700,7 +700,7 @@ public class ImputationCoreAlgorithm {
 								UBound2 = maxLim*Wjp1;
 							}
 							
-							double LBound2 = NjVfj*BoundL2 > Wjp1 ? NjVfj*BoundL2 : Wjp1;
+							Double LBound2 = NjVfj*BoundL2 > Wjp1 ? NjVfj*BoundL2 : Wjp1;
 							
 							if (iter > iterBound_D_Beta){
 								LBound2 = LBound2 > NjVfj*(1-maxBeta.get(j)) ? LBound2 : NjVfj*(1-maxBeta.get(j));
@@ -720,8 +720,8 @@ public class ImputationCoreAlgorithm {
 						if (impute.get(j-1)){
 							cj[j-1] = cj[j-1] + G1*NHt;
 							
-							double UBound1 = 0;
-							double LBound1 = 0;
+							Double UBound1 = 0.0;
+							Double LBound1 = 0.0;
 							if (iter > iterBound_D_Beta){
 								UBound1 = Wj < Njm1Vfjm1+maxD.get(j-1) ? Wj : Njm1Vfjm1+maxD.get(j-1);
 								LBound1 = 0.01 > (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1))) ? 0.01 : (Wj < Njm1Vfjm1*(1-maxBeta.get(j-1)) ? Wj : Njm1Vfjm1*(1-maxBeta.get(j-1)));
@@ -750,7 +750,7 @@ public class ImputationCoreAlgorithm {
 						
 					} else if (flags[j] && !flags[j+1]){
 						
-						mode[k][j] = 3;
+						mode[k][j] = 3.0;
 						if (j==0){
 							Nh[k+1][j] = Nh[k][j] + inFlow - (Nh[k][j]*vf.get(j) < qmax.get(j) ? Nh[k][j]*vf.get(j) : qmax.get(j));
 						} else {
@@ -758,13 +758,13 @@ public class ImputationCoreAlgorithm {
 						}
 						
 					} else if (flags[j] && flags[j+1]){
-						mode[k][j] = 4;
+						mode[k][j] = 4.0;
 						
 						if (impute.get(j)){
-							double BoundL = lowerBounds.get(j);
-							double BoundU = upperBounds.get(j);
+							Double BoundL = lowerBounds.get(j);
+							Double BoundU = upperBounds.get(j);
 							
-							double Nh0 = 0;
+							Double Nh0 = 0.0;
 							if (j==0){
 								Nh0 = measuredDensity[k+1][j] - (Nh[k][j]+inFlow-Wjp1*NjVfj/cj[j]);
 							} else {
@@ -780,11 +780,11 @@ public class ImputationCoreAlgorithm {
 							
 							cj[j] = cj[j] > Wjp1 ? cj[j] : Wjp1;
 							
-							double NHt = Nh0/(1+G2*Wjp1*NjVfj);
+							Double NHt = Nh0/(1+G2*Wjp1*NjVfj);
 							
 							cj[j] = 1/(1/cj[j]-(G2*NHt < 1/cj[j]*0.99 ? G2*NHt : 1/cj[j]*0.99));
 							
-							double UBound = 0;
+							Double UBound = 0.0;
 							if (BoundU != 0){
 								UBound = (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) > 0.01 ? (maxLim*Wjp1 < NjVfj ? maxLim*Wjp1 : NjVfj) : 0.01;
 							} else if (iter > iterBound_D_Beta){
@@ -793,7 +793,7 @@ public class ImputationCoreAlgorithm {
 								UBound = maxLim*Wjp1;
 							}
 							
-							double LBound = NjVfj*BoundL > Wjp1 ? NjVfj*BoundL : Wjp1;
+							Double LBound = NjVfj*BoundL > Wjp1 ? NjVfj*BoundL : Wjp1;
 							if (iter > iterBound_D_Beta){
 								LBound = LBound > NjVfj*(1-maxBeta.get(j)) ? LBound : NjVfj*(1-maxBeta.get(j));
 							} else {
@@ -815,7 +815,7 @@ public class ImputationCoreAlgorithm {
 							Nh[k+1][j] = Nh[k][j] + Wj - Wjp1*NjVfj/cj[j];
 						}
 						
-						double NHt = measuredDensity[k+1][j] - Nh[k+1][j];
+						Double NHt = measuredDensity[k+1][j] - Nh[k+1][j];
 						
 					}
 					
@@ -831,10 +831,10 @@ public class ImputationCoreAlgorithm {
 			
 			csave.add(iter, c);
 			// skip the check in lines 587 to 589
-			double[][] dummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh, -1));
+			Double[][] dummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh, -1.0));
 			dummy1 = MyUtilities.matrixAbsValue(dummy1);
-			double[] dummy2 = MyUtilities.meanColumns(dummy1);
-			double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
+			Double[] dummy2 = MyUtilities.meanColumns(dummy1);
+			Double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
 			MError.add(iter, MyUtilities.meanVector(dummy2)/MyUtilities.meanVector(dummy3));
 			
 			System.out.println("Density Error: " + MError.get(iter)*100 + ", iteration: " + (iter+1) + " of " + iterMax);
@@ -1112,13 +1112,13 @@ public class ImputationCoreAlgorithm {
 										
 				} // line 607
 				
-				double[][] BottleError = new double[ModeFilter.length][ModeFilter[0].length];
+				Double[][] BottleError = new Double[ModeFilter.length][ModeFilter[0].length];
 				for (int row=0;row<BottleError.length;row++){
 					for (int col=0;col<BottleError[0].length;col++){
 						if (ModeFilter[row][col] && measuredDensity[row][col]>0.001){
 							BottleError[row][col] = (measuredDensity[row][col]-Nh[row][col])/(measuredDensity[row][col] > 0.001 ? measuredDensity[row][col] : 0.001);
 						} else {
-							BottleError[row][col] = 0;
+							BottleError[row][col] = 0.0;
 						}
 					}
 				}
@@ -1146,7 +1146,7 @@ public class ImputationCoreAlgorithm {
 					}
 				}
 				
-				double limitNew = 0;
+				Double limitNew = 0.0;
 				for (int row=0;row<rowIndeces.size();row++){
 					if (impute.get(colIndeces.get(row))){
 						limitNew = Math.min(qmax.get(colIndeces.get(row)+1), w.get(colIndeces.get(row)+1)*(rhojam.get(colIndeces.get(row)+1) - Nh[rowIndeces.get(row)][colIndeces.get(row)+1]))*(1+percTol2);
@@ -1183,30 +1183,30 @@ public class ImputationCoreAlgorithm {
 		// *********************************************************************************************
 		
 		boolean Override = false;
-		double[][] Nha = Nh;
-		double[][] BETA1 = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double[][] dj1 = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double[][] OrInp = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double[][] OnrampFlw = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double[][] FlowBet = measuredFlow;
+		Double[][] Nha = Nh;
+		Double[][] BETA1 = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] dj1 = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] OrInp = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] OnrampFlw = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] FlowBet = measuredFlow;
 		FlowBet = MyUtilities.removeColumn(FlowBet, 1);
 		
 		for (int ii=1;ii<STime.length;ii++){   // line 655 to 758
-			Arrays.fill(dprev, 0);
+			Arrays.fill(dprev, 0.0);
 			for (int j=0;j<numberOfNodes-2;j++){
 				
 				if (impute.get(j)){
 					
-					 double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - Nha[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
-					 double Term2 = this.qmax.get(j) < Nha[ii][j]*this.vf.get(j) ? this.qmax.get(j) : Nha[ii][j]*this.vf.get(j);
+					 Double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - Nha[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
+					 Double Term2 = this.qmax.get(j) < Nha[ii][j]*this.vf.get(j) ? this.qmax.get(j) : Nha[ii][j]*this.vf.get(j);
 					 
 					 if (!orPresent.get(j)){
 						 BETA1[ii][j] = Math.max(0, 1-c[ii][j]/Term2);
-						 OnrampFlw[ii][j] = 0;
+						 OnrampFlw[ii][j] = 0.0;
 						 continue;
 					 }
 					 
-					 double MultFac = 0;
+					 Double MultFac = 0.0;
 					 
 					 if (c[ii][j]>Term1){
 						 
@@ -1220,13 +1220,13 @@ public class ImputationCoreAlgorithm {
 						 
 						 Term1 = Math.min(this.qmax.get(j+1), this.w.get(j+1)*(this.rhojam.get(j+1) - Nha[ii][j+1]));
 						 Term2 = Math.min(this.qmax.get(j), Nha[ii][j]*this.vf.get(j));
-						 double fac = Term1/c[ii][j];
+						 Double fac = Term1/c[ii][j];
 						 
 						 // Explicit Solution
-						 double d_soln = 0; double fr_soln = 0;
+						 Double d_soln = 0.0; Double fr_soln = 0.0;
 						 if (imputeOR.get(j) && imputeFR.get(j) || Override){
 							 
-							 double dummyMax = Math.max(0, dprev[j]);
+							 Double dummyMax = Math.max(0, dprev[j]);
 							 dummyMax = Math.max(dummyMax, Term1 - FlowBet[ii][j]);
 							 dummyMax = Math.max(dummyMax, c[ii][j]-Term2);
 							 d_soln = Math.min(c[ii][j], dummyMax);
@@ -1235,14 +1235,14 @@ public class ImputationCoreAlgorithm {
 						 } else if (!imputeOR.get(j)){
 							 
 							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*this.simulationTimeStep, orFlow_Giv[ii][j]))/2;
-							 double d_vertex = 0;
+							 Double d_vertex = 0.0;
 							 if (MultFac<1){
 								 d_vertex = (Term1 - FlowBet[ii][j])/fac;
 							 } else {
 								 d_vertex = orFlow_Giv[ii][j]/fac;
 							 }
 							 
-							 double dummyMax = Math.max(0, dprev[j]);
+							 Double dummyMax = Math.max(0, dprev[j]);
 							 dummyMax = Math.max(dummyMax, d_vertex);
 							 dummyMax = Math.max(dummyMax, c[ii][j]-Term2);
 							 d_soln = Math.min(c[ii][j], dummyMax);
@@ -1251,14 +1251,14 @@ public class ImputationCoreAlgorithm {
 						 } else {
 							 
 							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*this.simulationTimeStep, orFlow_Giv[ii][j]))/2;
-							 double d_vertex = 0;
+							 Double d_vertex = 0.0;
 							 if (MultFac<1){
 								 d_vertex = (Term1 - FlowBet[ii][j])/fac;
 							 } else {
 								 d_vertex = (Term1 + frFlow_Giv[ii][j] - fac*Term2)/fac;
 							 }
 							 
-							 double dummyMax = Math.max(0, dprev[j]);
+							 Double dummyMax = Math.max(0, dprev[j]);
 							 dummyMax = Math.max(dummyMax, d_vertex);
 							 dummyMax = Math.max(dummyMax, c[ii][j]-Term2);
 							 d_soln = Math.min(c[ii][j], dummyMax);
@@ -1277,17 +1277,17 @@ public class ImputationCoreAlgorithm {
 							 dj1[ii][j] = c[ii][j] - Term2;
 							 OrInp[ii][j] = dj1[ii][j] - dprev[j];
 							 OnrampFlw[ii][j] = dj1[ii][j];
-							 dprev[j] = 0;
+							 dprev[j] = 0.0;
 							 continue;
 						 }
 						 
 						 Term2 = Math.min(qmax.get(j), Nha[ii][j]*vf.get(j));
 						 
 						 // Explicit Solution
-						 double s_soln = 0; double r_soln = 0;
+						 Double s_soln = 0.0; Double r_soln = 0.0;
 						 if (imputeOR.get(j) && imputeFR.get(j) || Override){
 							 
-							 double dummyMax = Math.max(0, Term2 - FlowBet[ii][j]);
+							 Double dummyMax = Math.max(0, Term2 - FlowBet[ii][j]);
 							 dummyMax = Math.max(dummyMax, Term2 - c[ii][j]);
 							 dummyMax = Math.min(dummyMax, Term2);
 							 s_soln = Math.min(Term2, dummyMax);
@@ -1295,9 +1295,9 @@ public class ImputationCoreAlgorithm {
 							 
 						 } else if(!imputeOR.get(j)){
 							 
-							 double s_bnd = Math.max(0, Term2 - c[ii][j]);
+							 Double s_bnd = Math.max(0, Term2 - c[ii][j]);
 							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*simulationTimeStep, orFlow_Giv[ii][j]))/2;
-							 double s_vertex = 0;
+							 Double s_vertex = 0.0;
 							 if (MultFac<1){
 								 s_vertex = Term2 - FlowBet[ii][j];
 							 } else {
@@ -1308,9 +1308,9 @@ public class ImputationCoreAlgorithm {
 							 
 						 } else {
 							 
-							 double s_bnd = Math.max(0, Term2 - c[ii][j]);
+							 Double s_bnd = Math.max(0, Term2 - c[ii][j]);
 							 MultFac = Math.abs(FlowBet[ii][j]/Math.max(100*simulationTimeStep, frFlow_Giv[ii][j]))/2;
-							 double s_vertex = 0;
+							 Double s_vertex = 0.0;
 							 if (MultFac<1){
 								 s_vertex = Term2 - FlowBet[ii][j];
 							 } else {
@@ -1324,7 +1324,7 @@ public class ImputationCoreAlgorithm {
 						 dj1[ii][j] = r_soln;
 						 BETA1[ii][j] = s_soln/Term2;
 						 OrInp[ii][j] = r_soln;
-						 dprev[j] = 0;		 
+						 dprev[j] = 0.0;		 
 						 
 					 }
 					 					 
@@ -1332,26 +1332,26 @@ public class ImputationCoreAlgorithm {
 			}
 		} // line 758
 		
-		double[][] BETAF = new double[BETA.length][BETA[0].length];
+		Double[][] BETAF = new Double[BETA.length][BETA[0].length];
 		for (int row = 0;row<BETAF.length;row++){
 			for (int col = 0;col<BETAF[0].length;col++){
-				BETAF[row][col] = Math.max(0, Math.min(BETA[row][col]+BETA1[row][col], 1));
+				BETAF[row][col] = Math.max(0.0, Math.min(BETA[row][col]+BETA1[row][col], 1.0));
 			}
 		}
-		double[][] DJ = new double[dj1.length][dj1[0].length];
+		Double[][] DJ = new Double[dj1.length][dj1[0].length];
 		for (int row = 0;row<DJ.length;row++){
 			for (int col = 0;col<DJ[0].length;col++){
 				DJ[row][col] = dj1[row][col] + Demand[row][col];
 			}
 		}
 		
-		double[] DJBound = new double[BETA.length];
+		Double[] DJBound = new Double[BETA.length];
 		if (downBoundaryCongested) {
 			DJBound = MyUtilities.fetchColumn(c, c.length);
 			for (int k=0;i<DJBound.length;k++){
 				DJBound[k] -= Math.min(qmax.get(cellData.size()-1), Nha[k][cellData.size()-1]*vf.get(cellData.size()-1));
 				if (c[k][cellData.size()-1] <= 0.00001 + qmax.get(cellData.size()-1)){
-					DJBound[k] = 0;
+					DJBound[k] = 0.0;
 				}
 			}
 		}
@@ -1360,26 +1360,26 @@ public class ImputationCoreAlgorithm {
 		// ******* Using the DJ, run the model to get onramp flows *************************************
 		// *********************************************************************************************
 		
-		double[][] Nh_sim = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] Nh_sim = MyUtilities.zerosMatrix(STime.length, cellData.size());
 		
-		double[][] qj = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double[] InFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0);
-		double[] OutFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0);
+		Double[][] qj = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[] InFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0.0);
+		Double[] OutFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0.0);
 		
-		double InQ = 0;
+		Double InQ = 0.0;
 		MyUtilities.assignRow(Nh_sim, MyUtilities.fetchRow(measuredDensity,1), 0);
-		Arrays.fill(dprev,0);
-		double[][] OnrampInput = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double BoundDprev = 0;
-		double[] dummyVect = new double[cellData.size()]; 
-		double[] BoundaryRampFlow = new double[STime.length];
-		double[] BoundaryRampInp = new double[STime.length];
+		Arrays.fill(dprev,0.0);
+		Double[][] OnrampInput = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double BoundDprev = 0.0;
+		Double[] dummyVect = new Double[cellData.size()]; 
+		Double[] BoundaryRampFlow = new Double[STime.length];
+		Double[] BoundaryRampInp = new Double[STime.length];
 			
 		for (int ii=1;ii<STime.length;ii++){ // line 786 
 			
 			dummyVect = MyUtilities.fetchRow(Nh_sim, ii-1);
 			dummyVect = MyUtilities.addVectors(dummyVect, InFlow);
-			dummyVect = MyUtilities.addVectors(dummyVect, MyUtilities.scaleVector(OutFlow, -1));
+			dummyVect = MyUtilities.addVectors(dummyVect, MyUtilities.scaleVector(OutFlow, -1.0));
 			Nh_sim = MyUtilities.assignRow(Nh_sim, dummyVect, ii);
 			
 			OutFlow[OutFlow.length-1] = Math.min(Nh_sim[ii][Nh_sim[0].length-1]*vf.get(vf.size()-1), qmax.get(qmax.size()-1));
@@ -1406,19 +1406,19 @@ public class ImputationCoreAlgorithm {
 				
 				InQ += inputFLW[ii];
 				
-				double Capacity = w.get(0)*(rhojam.get(0)-Nh_sim[ii][0]);
+				Double Capacity = w.get(0)*(rhojam.get(0)-Nh_sim[ii][0]);
 				InFlow[0] = Math.min(Capacity, InQ);
 				InQ -= InFlow[0];
 				
 				for (int j=1;j<numberOfNodes-1;j++){
 					
-					double[][] Beta = {{(double) Math.round((1-BETAF[ii][j-1])*10000)/10000,1},{(double) Math.round(BETAF[ii][j-1]*10000)/10000,0}};
-					double[] Demands = {Math.min(qmax.get(j-1), Nh_sim[ii][j-1]*vf.get(j-1)), DJ[ii][j-1]};
+					Double[][] Beta = {{(double) Math.round((1-BETAF[ii][j-1])*10000)/10000,1.0},{(double) Math.round(BETAF[ii][j-1]*10000)/10000,0.0}};
+					Double[] Demands = {Math.min(qmax.get(j-1), Nh_sim[ii][j-1]*vf.get(j-1)), DJ[ii][j-1]};
 					
-					double[] DemandOut = {Beta[0][0]*Demands[0]+Beta[0][1]*Demands[1],Beta[1][0]*Demands[0]+Beta[1][1]*Demands[1]}; // 2x2 times 2x1 matrix multiplication
-					double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh_sim[ii][j])),10000};
+					Double[] DemandOut = {Beta[0][0]*Demands[0]+Beta[0][1]*Demands[1],Beta[1][0]*Demands[0]+Beta[1][1]*Demands[1]}; // 2x2 times 2x1 matrix multiplication
+					Double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh_sim[ii][j])),10000.0};
 					
-					double[][] Dij = new double[Beta.length][Beta[0].length]; // line 820
+					Double[][] Dij = new Double[Beta.length][Beta[0].length]; // line 820
 					Dij[0][0] = Beta[0][0]*Demands[0]; Dij[0][1] = Beta[0][1]*Demands[1];
 					Dij[1][0] = Beta[1][0]*Demands[0]; Dij[1][1] = Beta[1][1]*Demands[1];
 					
@@ -1459,7 +1459,7 @@ public class ImputationCoreAlgorithm {
 					if (AdjFact[0].equals(java.lang.Double.NaN)){ AdjFact[0] = 0.0; }
 					if (AdjFact[1].equals(java.lang.Double.NaN)){ AdjFact[1] = 0.0; }
 					
-					double[] flow = new double[2]; flow[0] = Demands[0]*AdjFact[0]; flow[1] = Demands[1]*AdjFact[1];
+					Double[] flow = new Double[2]; flow[0] = Demands[0]*AdjFact[0]; flow[1] = Demands[1]*AdjFact[1];
 					
 					OutFlow[j-1] = flow[0];
 					OrFlow[ii][j-1] = flow[1];
@@ -1475,11 +1475,11 @@ public class ImputationCoreAlgorithm {
 				
 			} // line 842
 
-		double[][] dummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh_sim, -1));
+		Double[][] dummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh_sim, -1.0));
 		dummy1 = MyUtilities.matrixAbsValue(dummy1);
-		double[] dummy2 = MyUtilities.meanColumns(dummy1);
-		double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
-		double dummy4 = MyUtilities.meanVector(dummy2)/MyUtilities.meanVector(dummy3);
+		Double[] dummy2 = MyUtilities.meanColumns(dummy1);
+		Double[] dummy3 = MyUtilities.meanColumns(measuredDensity);
+		Double dummy4 = MyUtilities.meanVector(dummy2)/MyUtilities.meanVector(dummy3);
 		
 		System.out.println(" Final Density Error: " + dummy4*100);
 		
@@ -1487,31 +1487,31 @@ public class ImputationCoreAlgorithm {
 		// ******* Check Onramp flows calculated in the previous section *******************************
 		// *********************************************************************************************
 		
-		double[][] Nh_check = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] Nh_check = MyUtilities.zerosMatrix(STime.length, cellData.size());
 		qj = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		InFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0);
-		OutFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0);
-		double[][] ORINP = OnrampInput;
+		InFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0.0);
+		OutFlow = MyUtilities.scaleVector(MyUtilities.onesVector(cellData.size()),0.0);
+		Double[][] ORINP = OnrampInput;
 		for (int j=0;j<ORINP.length;j++){
 			for (int k=0;k<ORINP[0].length;k++){
 				ORINP[j][k] = Math.max(0, ORINP[j][k]);
 			}
 		}
 		
-		double[] DJBoundSav = new double[DJBound.length];
-		double BoundaryQ = 0.0;
-		InQ = 0;
+		Double[] DJBoundSav = new Double[DJBound.length];
+		Double BoundaryQ = 0.0;
+		InQ = 0.0;
 		Nh_check = MyUtilities.assignRow(Nh_check, measuredDensity[0], 0);
 		
-		double[][] InFl = MyUtilities.zerosMatrix(STime.length, cellData.size());
-		double[][] OutFl = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] InFl = MyUtilities.zerosMatrix(STime.length, cellData.size());
+		Double[][] OutFl = MyUtilities.zerosMatrix(STime.length, cellData.size());
 	
 		for(int ii=1;ii<STime.length;ii++){
 			
 			InFl = MyUtilities.assignRow(InFl, InFlow, ii);
 			OutFl = MyUtilities.assignRow(OutFl, OutFlow, ii);
-			double[] dummyV = MyUtilities.addVectors(MyUtilities.fetchRow(Nh_check, ii-1), InFlow);
-			dummyV = MyUtilities.addVectors(dummyV, MyUtilities.scaleVector(OutFlow, -1));
+			Double[] dummyV = MyUtilities.addVectors(MyUtilities.fetchRow(Nh_check, ii-1), InFlow);
+			dummyV = MyUtilities.addVectors(dummyV, MyUtilities.scaleVector(OutFlow, -1.0));
 			Nh_check = MyUtilities.assignRow(Nh_check, dummyV, ii);
 			
 			OutFlow[OutFlow.length-1] = Math.min(Nh_check[ii][Nh_check[0].length-1]*vf.get(vf.size()-1), qmax.get(qmax.size()-1));
@@ -1539,19 +1539,19 @@ public class ImputationCoreAlgorithm {
 			qj = MyUtilities.assignRow(qj, MyUtilities.addVectors(MyUtilities.fetchRow(qj, ii-1), MyUtilities.fetchRow(ORINP, ii)), ii);
 			
 			InQ = InQ + inputFLW[ii];
-			double Capacity = w.get(0)*(rhojam.get(0)-Nh_check[ii][1]);
+			Double Capacity = w.get(0)*(rhojam.get(0)-Nh_check[ii][1]);
 			InFlow[0] = Math.min(Capacity, InQ);
 			InQ = InQ - InFlow[0];
 			
 			for (int j=1;j<numberOfNodes-1;j++){
 				
-				double[][] Beta = {{(double) Math.round((1-BETAF[ii][j-1])*10000)/10000,1},{(double) Math.round(BETAF[ii][j-1]*10000)/10000,0}};
-				double[] Demands = {Math.min(qmax.get(j-1), Nh_check[ii][j-1]*vf.get(j-1)), qj[ii][j-1]};
+				Double[][] Beta = {{(double) Math.round((1-BETAF[ii][j-1])*10000)/10000,1.0},{(double) Math.round(BETAF[ii][j-1]*10000)/10000,0.0}};
+				Double[] Demands = {Math.min(qmax.get(j-1), Nh_check[ii][j-1]*vf.get(j-1)), qj[ii][j-1]};
 				
-				double[] DemandOut = {Beta[0][0]*Demands[0]+Beta[0][1]*Demands[1],Beta[1][0]*Demands[0]+Beta[1][1]*Demands[1]}; // 2x2 times 2x1 matrix multiplication
-				double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh_check[ii][j])),10000};
+				Double[] DemandOut = {Beta[0][0]*Demands[0]+Beta[0][1]*Demands[1],Beta[1][0]*Demands[0]+Beta[1][1]*Demands[1]}; // 2x2 times 2x1 matrix multiplication
+				Double[] Capacities = {Math.min(qmax.get(j), w.get(j)*(rhojam.get(j)-Nh_check[ii][j])),10000.0};
 				
-				double[][] Dij = new double[Beta.length][Beta[0].length];
+				Double[][] Dij = new Double[Beta.length][Beta[0].length];
 				Dij[0][0] = Beta[0][0]*Demands[0]; Dij[0][1] = Beta[0][1]*Demands[1];
 				Dij[1][0] = Beta[1][0]*Demands[0]; Dij[1][1] = Beta[1][1]*Demands[1];
 				
@@ -1592,7 +1592,7 @@ public class ImputationCoreAlgorithm {
 				if (AdjFact[0].equals(java.lang.Double.NaN)){ AdjFact[0] = 0.0; }
 				if (AdjFact[1].equals(java.lang.Double.NaN)){ AdjFact[1] = 0.0; }
 				
-				double[] flow = new double[2]; flow[0] = Demands[0]*AdjFact[0]; flow[1] = Demands[1]*AdjFact[1];
+				Double[] flow = new Double[2]; flow[0] = Demands[0]*AdjFact[0]; flow[1] = Demands[1]*AdjFact[1];
 				
 				
 				OutFlow[j-1] = flow[0];
@@ -1610,46 +1610,46 @@ public class ImputationCoreAlgorithm {
 		// calculate density and flow errors at the end of the method:
 		
 		// Final Density Error (Matlab line: DensityError=num2str(mean(mean(abs(Density-Nh)))./mean(mean(Nh))*100);)
-		double[][] ddummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh_sim, -1));
+		Double[][] ddummy1 = MyUtilities.addMatrices(measuredDensity, MyUtilities.scaleMatrix(Nh_sim, -1.0));
 		ddummy1 = MyUtilities.matrixAbsValue(ddummy1);
-		double[] ddummy2 = MyUtilities.meanColumns(ddummy1);
-		double[] ddummy3 = MyUtilities.meanColumns(measuredDensity);
-		double ddummy4 = MyUtilities.meanVector(ddummy2)/MyUtilities.meanVector(ddummy3);
+		Double[] ddummy2 = MyUtilities.meanColumns(ddummy1);
+		Double[] ddummy3 = MyUtilities.meanColumns(measuredDensity);
+		Double ddummy4 = MyUtilities.meanVector(ddummy2)/MyUtilities.meanVector(ddummy3);
 		
 		System.out.println(" Final Density Error: " + ddummy4*100);
 		
 		// Final Flow Error (Matlab line: FlowError=num2str(mean(mean(abs(FlowCompare-Flow)))./mean(mean(Flow))*100);)
-		double[][] FlowCompare = MyUtilities.zerosMatrix(Nh_check.length, Nh_check[0].length);
+		Double[][] FlowCompare = MyUtilities.zerosMatrix(Nh_check.length, Nh_check[0].length);
 		FlowCompare = MyUtilities.assignColumn(FlowCompare, MyUtilities.fetchColumn(InFl, 0), 0);
 		for (int j=1;j<FlowCompare[0].length;j++){
 			MyUtilities.assignColumn(FlowCompare, MyUtilities.fetchColumn(FlowBet, j-1), j);
 		}
-		double[][] dddummy1 = MyUtilities.addMatrices(measuredFlow, MyUtilities.scaleMatrix(FlowCompare, -1));
+		Double[][] dddummy1 = MyUtilities.addMatrices(measuredFlow, MyUtilities.scaleMatrix(FlowCompare, -1.0));
 		dddummy1 = MyUtilities.matrixAbsValue(dddummy1);
-		double[] dddummy2 = MyUtilities.meanColumns(dddummy1);
-		double[] dddummy3 = MyUtilities.meanColumns(measuredFlow);
-		double dddummy4 = MyUtilities.meanVector(dddummy2)/MyUtilities.meanVector(dddummy3);
+		Double[] dddummy2 = MyUtilities.meanColumns(dddummy1);
+		Double[] dddummy3 = MyUtilities.meanColumns(measuredFlow);
+		Double dddummy4 = MyUtilities.meanVector(dddummy2)/MyUtilities.meanVector(dddummy3);
 		
 		System.out.println(" Final Flow Error: " + dddummy4*100);
 		
 		int tratio = (int) (demandTimeStep / simulationTimeStep);
 		// Fill in the missing fields in the cells:
-		for (int j=0;j<this.cellData.size();j++){
-			Double[] hand = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(OnrampInput,j),tratio,(int) (24/this.demandTimeStep)));
-			ArrayList<Double> cardsList = new ArrayList<Double>(Arrays.asList(hand));
-			cellData.get(j+1).setOnRampInput();
-		}
-		
+//		for (int j=0;j<this.cellData.size();j++){
+//			Double[] hand = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(OnrampInput,j),tratio,(int) (24/this.demandTimeStep)));
+//			ArrayList<Double> cardsList = new ArrayList<Double>(Arrays.asList(hand));
+//			cellData.get(j+1).setOnRampInput();
+//		}
+//		
 			
 	} // end of method run()
 	
 	private void initializeDataMatrices(){
 		
-		measuredDensity = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
-		measuredFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
-		measuredSpeed = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
-		measuredOrFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
-		measuredFrFlow = new double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredDensity = new Double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredFlow = new Double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredSpeed = new Double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredOrFlow = new Double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
+		measuredFrFlow = new Double[detectorList.values().iterator().next().getDensityData().size()][cellData.size()];
 		
 	}
 

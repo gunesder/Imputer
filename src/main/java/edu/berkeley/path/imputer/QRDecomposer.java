@@ -22,7 +22,7 @@ public class QRDecomposer {
    /** Array for internal storage of decomposition.
    @serial internal array storage.
    */
-   private double[][] QR;
+   private Double[][] QR;
 
    /** Row and column dimensions.
    @serial column dimension.
@@ -33,7 +33,7 @@ public class QRDecomposer {
    /** Array for internal storage of diagonal of R.
    @serial diagonal of R.
    */
-   private double[] Rdiag;
+   private Double[] Rdiag;
 
 /* ------------------------
    Constructor
@@ -44,17 +44,17 @@ public class QRDecomposer {
    @return     Structure to access R and the Householder vectors and compute Q.
    */
 
-   public QRDecomposer (double[][] A) {
+   public QRDecomposer (Double[][] A) {
       // Initialize.
       QR = A;
       m = A.length;
       n = A[0].length;
-      Rdiag = new double[n];
+      Rdiag = new Double[n];
 
       // Main loop.
       for (int k = 0; k < n; k++) {
          // Compute 2-norm of k-th column without under/overflow.
-         double nrm = 0;
+         Double nrm = 0.0;
          for (int i = k; i < m; i++) {
             nrm = Math.hypot(nrm,QR[i][k]);
          }
@@ -71,7 +71,7 @@ public class QRDecomposer {
 
             // Apply transformation to remaining columns.
             for (int j = k+1; j < n; j++) {
-               double s = 0.0; 
+               Double s = 0.0; 
                for (int i = k; i < m; i++) {
                   s += QR[i][k]*QR[i][j];
                }
@@ -105,9 +105,9 @@ public class QRDecomposer {
    @return     Lower trapezoidal matrix whose columns define the reflections
    */
 
-   public double[][] getH () {
-      double[][] X = new double[m][n];
-      double[][] H = X;
+   public Double[][] getH () {
+      Double[][] X = new Double[m][n];
+      Double[][] H = X;
       for (int i = 0; i < m; i++) {
          for (int j = 0; j < n; j++) {
             if (i >= j) {
@@ -124,9 +124,9 @@ public class QRDecomposer {
    @return     R
    */
 
-   public double[][] getR () {
-	   double[][] X = new double[n][n];
-      double[][] R = X;
+   public Double[][] getR () {
+	   Double[][] X = new Double[n][n];
+      Double[][] R = X;
       for (int i = 0; i < n; i++) {
          for (int j = 0; j < n; j++) {
             if (i < j) {
@@ -145,9 +145,9 @@ public class QRDecomposer {
    @return     Q
    */
 
-   public double[][] getQ () {
-	  double[][] X = new double[m][n];
-      double[][] Q = X;
+   public Double[][] getQ () {
+	  Double[][] X = new Double[m][n];
+      Double[][] Q = X;
       for (int k = n-1; k >= 0; k--) {
          for (int i = 0; i < m; i++) {
             Q[i][k] = 0.0;
@@ -155,7 +155,7 @@ public class QRDecomposer {
          Q[k][k] = 1.0;
          for (int j = k; j < n; j++) {
             if (QR[k][k] != 0) {
-               double s = 0.0;
+               Double s = 0.0;
                for (int i = k; i < m; i++) {
                   s += QR[i][k]*Q[i][j];
                }

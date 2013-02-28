@@ -351,9 +351,9 @@ public class Imputer {
 		
 		for (int key: detectors.keySet()){
 			
-			double[] flow = MyUtilities.scaleVector(detectors.get(key).getFlowDataArray(),detectors.get(key).getNumberOfLanes());
-			double[] speed = detectors.get(key).getSpeedDataArray();
-			double[] density = MyUtilities.scaleVector(detectors.get(key).getDensityDataArray(),detectors.get(key).getNumberOfLanes());
+			Double[] flow = MyUtilities.scaleVector(detectors.get(key).getFlowDataArray(),(double) detectors.get(key).getNumberOfLanes());
+			Double[] speed = detectors.get(key).getSpeedDataArray();
+			Double[] density = MyUtilities.scaleVector(detectors.get(key).getDensityDataArray(),(double) detectors.get(key).getNumberOfLanes());
 			
 			PrintWriter outFlow = new PrintWriter(new FileWriter(key + "_flw.txt"));
 			PrintWriter outSpeed = new PrintWriter(new FileWriter(key + "_spd.txt"));

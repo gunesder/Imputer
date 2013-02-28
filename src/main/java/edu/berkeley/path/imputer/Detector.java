@@ -17,10 +17,10 @@ public class Detector implements Serializable{
 	private ArrayList<Double> flowData = new ArrayList<Double>();
 	private int freewayNumber;
 	private CharSequence freewayDirection;
-	private double absolutePM;
-	private double latitude;
-	private double longitude;
-	private double detectorLength;
+	private Double absolutePM;
+	private Double latitude;
+	private Double longitude;
+	private Double detectorLength;
 	private CharSequence detectorName;
 	private int numberOfLanes;
 	private int linkAssoc;
@@ -50,28 +50,28 @@ public class Detector implements Serializable{
 	public void setFreewayDirection(CharSequence charSequence) {
 		this.freewayDirection = charSequence;
 	}
-	public double getAbsolutePM() {
+	public Double getAbsolutePM() {
 		return absolutePM;
 	}
-	public void setAbsolutePM(double absolutePM) {
+	public void setAbsolutePM(Double absolutePM) {
 		this.absolutePM = absolutePM;
 	}
-	public double getLatitude() {
+	public Double getLatitude() {
 		return latitude;
 	}
-	public void setLatitude(double latitude) {
+	public void setLatitude(Double latitude) {
 		this.latitude = latitude;
 	}
-	public double getLongitude() {
+	public Double getLongitude() {
 		return longitude;
 	}
-	public void setLongitude(double longitude) {
+	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
 	}
-	public double getDetectorLength() {
+	public Double getDetectorLength() {
 		return detectorLength;
 	}
-	public void setDetectorLength(double detectorLength) {
+	public void setDetectorLength(Double detectorLength) {
 		this.detectorLength = detectorLength;
 	}
 	public CharSequence getDetectorName() {
@@ -92,9 +92,9 @@ public class Detector implements Serializable{
 	public ArrayList<Double> getSpeedData() {
 		return speedData;
 	}
-		public double[] getSpeedDataArray() {
+		public Double[] getSpeedDataArray() {
 			Double[] d = speedData.toArray(new Double[speedData.size()]);
-			double[] dd = new double[d.length];
+			Double[] dd = new Double[d.length];
 			for(int i=0;i<d.length;i++){  
 				 dd[i] = d[i].doubleValue();  
 			}  
@@ -106,9 +106,9 @@ public class Detector implements Serializable{
 	public ArrayList<Double> getDensityData() {
 		return densityData;
 	}
-		public double[] getDensityDataArray() {
+		public Double[] getDensityDataArray() {
 			Double[] d = densityData.toArray(new Double[densityData.size()]);
-			double[] dd = new double[d.length];
+			Double[] dd = new Double[d.length];
 			for(int i=0;i<d.length;i++){  
 				 dd[i] = d[i].doubleValue();  
 			}  
@@ -120,9 +120,9 @@ public class Detector implements Serializable{
 	public ArrayList<Double> getFlowData() {
 		return flowData;
 	}
-		public double[] getFlowDataArray() {
+		public Double[] getFlowDataArray() {
 			Double[] d = flowData.toArray(new Double[flowData.size()]);
-			double[] dd = new double[d.length];
+			Double[] dd = new Double[d.length];
 			for(int i=0;i<d.length;i++){  
 				 dd[i] = d[i].doubleValue();  
 			}  
@@ -152,27 +152,27 @@ public class Detector implements Serializable{
 	public void setSourceAddress(String sourceAddress) {
 		this.sourceAddress = sourceAddress;
 	}
-	public double getHealthStatus() {
+	public Double getHealthStatus() {
 		return healthStatus;
 	}
-	public void setHealthStatus(double healthStatus) {
+	public void setHealthStatus(Double healthStatus) {
 		this.healthStatus = healthStatus;
 	}
 	
 	// methods
-	public void addDatumToSpeed(double x){
+	public void addDatumToSpeed(Double x){
 		this.speedData.add(x);
 	}
 	
-	public void addDatumToDensity(double x){
+	public void addDatumToDensity(Double x){
 		this.densityData.add(x);
 	}
 	
-	public void addDatumToFlow(double x){
+	public void addDatumToFlow(Double x){
 		this.flowData.add(x);
 	}
 	
-	public double[] getSmoothedDataArray(String str) {
+	public Double[] getSmoothedDataArray(String str) {
 		Double[] d = new Double[speedData.size()];
 		if (str.equals("speed")){
 			d = speedData.toArray(new Double[speedData.size()]);
@@ -183,7 +183,7 @@ public class Detector implements Serializable{
 		} else {
 			throw new IllegalArgumentException("Illegal data retrieval");
 		}
-		double[] dd = new double[d.length];
+		Double[] dd = new Double[d.length];
 		for(int i=0;i<d.length;i++){  
 			 dd[i] = d[i].doubleValue();  
 		}  

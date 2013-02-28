@@ -23,8 +23,8 @@ public class Cell {
 	private ArrayList<Double> offRampFlow = new ArrayList<Double>();
 	private ArrayList<Double> beta = new ArrayList<Double>();
 	private ArrayList<Double> onRampInput = new ArrayList<Double>();
-	private double[][] measuredOnrampFlow = new double[289][1]; 
-	private double[][] measuredOfframpFlow = new double[289][1]; 
+	private Double[][] measuredOnrampFlow = new Double[289][1]; 
+	private Double[][] measuredOfframpFlow = new Double[289][1]; 
 	private ArrayList<Double> Velocity = new ArrayList<Double>();
 	private ArrayList<Double> Demand = new ArrayList<Double>();
 	private ArrayList<Integer> onrampsPerLink = new ArrayList<Integer>();
@@ -34,16 +34,16 @@ public class Cell {
 	public LinkedList<Link> getLinks() {
 		return links;
 	}
-	public double[][] getMeasuredOnrampFlow() {
+	public Double[][] getMeasuredOnrampFlow() {
 		return measuredOnrampFlow;
 	}
-	public void setMeasuredOnrampFlow(double[][] measuredOnrampFlow) {
+	public void setMeasuredOnrampFlow(Double[][] measuredOnrampFlow) {
 		this.measuredOnrampFlow = measuredOnrampFlow;
 	}
-	public double[][] getMeasuredOfframpFlow() {
+	public Double[][] getMeasuredOfframpFlow() {
 		return measuredOfframpFlow;
 	}
-	public void setMeasuredOfframpFlow(double[][] measuredOfframpFlow) {
+	public void setMeasuredOfframpFlow(Double[][] measuredOfframpFlow) {
 		this.measuredOfframpFlow = measuredOfframpFlow;
 	}
 	public ArrayList<Boolean> getImputeOR() {
@@ -173,8 +173,11 @@ public class Cell {
 	// constructors
 	
 	public Cell(int datasize){
-		measuredOnrampFlow = new double[datasize][1];
-		measuredOfframpFlow = new double[datasize][1];
+		measuredOnrampFlow = new Double[datasize][1];
+		measuredOfframpFlow = new Double[datasize][1];
+		// initialize to zero
+		measuredOnrampFlow = MyUtilities.zerosMatrix(datasize, 1);
+		measuredOfframpFlow = MyUtilities.zerosMatrix(datasize, 1);
 	}
 	
 	// methods
@@ -198,22 +201,22 @@ public class Cell {
 		this.imputeFR.add(b);
 	}
 	
-	public void appendColumnToMeasuredOnrampFlow (double[] v){
+	public void appendColumnToMeasuredOnrampFlow (Double[] v){
 		MyUtilities.appendColumn(this.measuredOnrampFlow, v);
 	}
 	
-	public void appendColumnToMeasuredOfframpFlow (double[] v){
+	public void appendColumnToMeasuredOfframpFlow (Double[] v){
 		MyUtilities.appendColumn(this.measuredOfframpFlow, v);
 	}
 	public void appendZeroColumnToMeasuredOnrampFlow() {
-		double[] v = new double[this.measuredOnrampFlow.length];
-		Arrays.fill(v, 0);
+		Double[] v = new Double[this.measuredOnrampFlow.length];
+		Arrays.fill(v, 0.0);
 		MyUtilities.appendColumn(this.measuredOnrampFlow, v);
 		
 	}
 	public void appendZeroColumnToMeasuredOfframpFlow() {
-		double[] v = new double[this.measuredOfframpFlow.length];
-		Arrays.fill(v, 0);
+		Double[] v = new Double[this.measuredOfframpFlow.length];
+		Arrays.fill(v, 0.0);
 		MyUtilities.appendColumn(this.measuredOfframpFlow, v);		
 	}
 	
