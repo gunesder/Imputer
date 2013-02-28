@@ -139,5 +139,11 @@ public class MyUtilitiesTest extends TestCase {
 		double[] expected = {6.0,7.0,8.0,9.0,10.0};
 		assertTrue(MyUtilities.compareDoubleArrays(expected, MyUtilities.meanColumns(input1)));
 	}
+	
+	public void testMeanRows(){
+		double[][] input1 = {{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15}};
+		double[] expected = {3.0,8.0,13.0};
+		assertTrue(MyUtilities.compareDoubleArrays(expected, MyUtilities.meanRows(input1)));
+	}
 
 }

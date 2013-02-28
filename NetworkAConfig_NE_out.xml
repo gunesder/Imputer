@@ -304,22 +304,22 @@
                     <end node_id="-32593702"/>
                     <dynamics type="CTM"/>
                 </link>
-                <link id="-32593704" type="freeway" length="0.14341687466199454" lanes="4">
+                <link id="-32593704" type="freeway" length="0.14341687466199454" lanes="5">
                     <begin node_id="-32593704"/>
                     <end node_id="-32593705"/>
                     <dynamics type="CTM"/>
                 </link>
-                <link id="-32593705" type="freeway" length="0.15751972806439635" lanes="4">
+                <link id="-32593705" type="freeway" length="0.15751972806439635" lanes="5">
                     <begin node_id="-32593705"/>
                     <end node_id="-136209"/>
                     <dynamics type="CTM"/>
                 </link>
-                <link id="-26638401" type="freeway" length="0.11676452538526748" lanes="4">
+                <link id="-26638401" type="freeway" length="0.11676452538526748" lanes="5">
                     <begin node_id="-26638401"/>
                     <end node_id="-26638402"/>
                     <dynamics type="CTM"/>
                 </link>
-                <link id="-26638402" type="freeway" length="0.07028073370125713" lanes="4">
+                <link id="-26638402" type="freeway" length="0.07028073370125713" lanes="5">
                     <begin node_id="-26638402"/>
                     <end node_id="-40441"/>
                     <dynamics type="CTM"/>
@@ -334,7 +334,7 @@
                     <end node_id="-40424"/>
                     <dynamics type="CTM"/>
                 </link>
-                <link id="-1" type="freeway" length="0.15561011646391817" lanes="4">
+                <link id="-1" type="freeway" length="0.15561011646391817" lanes="5">
                     <begin node_id="-136209"/>
                     <end node_id="-26638401"/>
                     <dynamics type="CTM"/>
@@ -354,7 +354,7 @@
                     <end node_id="-32593704"/>
                     <dynamics type="CTM"/>
                 </link>
-                <link id="-5" type="freeway" length="0.16356080924902186" lanes="1">
+                <link id="-5" type="onramp" length="0.16356080924902186" lanes="1">
                     <begin node_id="-3"/>
                     <end node_id="-3784303"/>
                     <dynamics type="CTM"/>

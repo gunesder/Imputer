@@ -239,7 +239,17 @@ public class MyUtilities {
 		return out;
 	}	
 	
+	// matrix rowwise means
+	public static double[] meanRows(double[][] M){
+		double[] out = new double[M.length];
+		for (int i=0;i<M.length;i++){
+			out[i] = meanVector(fetchRow(M,i));
+		}
+		return out;
+	}	
+	
 	// TODO: Write tests for the methods below this
+	
 	// create vector of ones
 	public static double[] onesVector(int size){
 		double[] out = new double[size];
@@ -500,6 +510,17 @@ public class MyUtilities {
 		
 		return out;	
 		
+	}
+	
+	public static double[][] reshapeVectorIntoMatrix(double[] v, int m, int n){
+		double[][] out = new double[m][n];
+		int k=0;
+		for (int i=0;i<m;i++){
+			for (int j=0;j<n;j++){
+				out[i][j] = v[k++];
+			}
+		}
+		return out;
 	}
 		
 	
