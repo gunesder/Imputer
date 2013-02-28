@@ -36,6 +36,8 @@ public class Imputer {
 	private static HashMap<Integer, Link> links = new HashMap<Integer, Link>();
 	private static LinkedList<Link> mainlineLinks = new LinkedList<Link>();
 	private static LinkedList<Cell> cells = new LinkedList<Cell>();
+	private LinkedList<Cell> imputedCells = new LinkedList<Cell>();
+	private LinkedList<Cell> splitCells = new LinkedList<Cell>();
 	private static HashMap<Integer, Detector> detectors = new HashMap<Integer, Detector>();
 	private Interval timeInterval;
 	public static double totalTimeInHours;
@@ -43,6 +45,18 @@ public class Imputer {
 	// getters and setters
 	public static HashMap<Integer, Node> getNodes() {
 		return nodes;
+	}
+	public LinkedList<Cell> getSplitCells() {
+		return splitCells;
+	}
+	public void setSplitCells(LinkedList<Cell> splitCells) {
+		this.splitCells = splitCells;
+	}
+	public LinkedList<Cell> getImputedCells() {
+		return imputedCells;
+	}
+	public void setImputedCells(LinkedList<Cell> imputedCells) {
+		this.imputedCells = imputedCells;
 	}
 	public static double getTotalTimeInHours() {
 		return totalTimeInHours;
@@ -465,8 +479,18 @@ public class Imputer {
 		
 		ImputationCoreAlgorithm imp_algo = new ImputationCoreAlgorithm(cells,detectors);
 		imp_algo.run();
+		this.imputedCells = imp_algo.getCellData();
 		
 	}
+	
+//	public void splitMegaCells(){
+//		
+//		MegaCellSplitter splitter = new MegaCellSplitter(imputedCells,detectors);
+//		splitter.run();
+//		this.splitCells = splitter.getSplitCellData();
+//	}
+	
+	
 	
 
 }

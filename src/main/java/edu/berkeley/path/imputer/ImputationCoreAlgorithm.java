@@ -41,7 +41,13 @@ public class ImputationCoreAlgorithm {
 		// learning algorithm parameters
 	
 	// getters and setters
-		// TODO: generate getters and setters
+	public LinkedList<Cell> getCellData() {
+		return cellData;
+	}
+
+	public void setCellData(LinkedList<Cell> cellData) {
+		this.cellData = cellData;
+	}
 	
 	// constructors
 	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors){
@@ -1632,14 +1638,110 @@ public class ImputationCoreAlgorithm {
 		
 		System.out.println(" Final Flow Error: " + dddummy4*100);
 		
-		int tratio = (int) (demandTimeStep / simulationTimeStep);
 		// Fill in the missing fields in the cells:
-//		for (int j=0;j<this.cellData.size();j++){
-//			Double[] hand = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(OnrampInput,j),tratio,(int) (24/this.demandTimeStep)));
-//			ArrayList<Double> cardsList = new ArrayList<Double>(Arrays.asList(hand));
-//			cellData.get(j+1).setOnRampInput();
-//		}
-//		
+		int tratio = (int) (demandTimeStep / simulationTimeStep);
+		Double[][] Velocity = new Double[measuredSpeed.length][measuredSpeed[0].length];
+		Double[] vector = MyUtilities.onesVector(Velocity.length);
+		for (int j=0;j<Velocity.length;j++){
+			for (int k=0;k<Velocity[0].length;k++){
+				Velocity[j][k] = Math.min(70.0,InFl[j][k]/Nh_check[j][k]/simulationTimeStep*linkLength.get(j));
+			}			
+		}
+		
+		FrFlow = MyUtilities.assignColumn(FrFlow, MyUtilities.scaleVector(MyUtilities.onesVector(FrFlow.length), 0.0), FrFlow[0].length-1);
+		frPresent.set(frPresent.size()-1, false);
+		orPresent.set(frPresent.size()-1, false);
+		
+		for (int j=0;j<this.cellData.size()-1;j++){
+			
+			// Onramp Flows
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OnrampInput,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			ArrayList<Double> arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j+1).setOnRampInput(arraylist);
+			// Onramp Demands
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Demand,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j+1).setDemand(arraylist);
+			// DJ
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(DJ,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j+1).setDJ(arraylist);
+			// c (effective demands)
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(c,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j+1).setC(arraylist);
+			// Onramp Flow
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OrFlow,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j+1).setOnRampFlow(arraylist);
+			// Given onramp flow (probably redundant)
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(orFlow_Giv,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j+1).setOrFlowNonImputed(arraylist);
+			
+			// Velocity (simulated)
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setVelocity(arraylist);
+			// Offramp Flow
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FrFlow,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setOffRampFlow(arraylist);
+			// Given Offramp Flow (probably redundant)
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setFrFlowNonImputed(arraylist);
+			// BETA (split ratios)
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(BETAF,j),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setBeta(arraylist);
+			// cell outflows
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OutFl,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setOutFlow(arraylist);
+			// simulated flows at the corresponding detector locations
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FlowCompare,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setFlowCompare(arraylist);
+			// simulated densities
+			vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,j),tratio,(int) (24/this.demandTimeStep)));
+			arraylist = new ArrayList<Double>(Arrays.asList(vector));
+			cellData.get(j).setSimDensity(arraylist);			
+			
+		}
+		
+		// First and Last Cells
+		// first:
+		vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(orFLW_save,1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		ArrayList<Double> arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getFirst().setOnRampInput(arraylist);
+		cellData.getFirst().setDemand(arraylist);
+		cellData.getFirst().setOnRampFlow(arraylist);
+		cellData.getFirst().setOrFlowNonImputed(arraylist);
+		vector = MyUtilities.scaleVector(MyUtilities.onesVector(OrInp.length), 0.0);
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getFirst().setDJ(arraylist);
+		cellData.getFirst().setC(arraylist);
+		// last:
+		vector = MyUtilities.scaleVector(MyUtilities.onesVector((int) (24/this.demandTimeStep)),0.0);
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getLast().setBeta(arraylist);
+		cellData.getLast().setOffRampFlow(arraylist);
+		vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OutFl,OutFl[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getLast().setOutFlow(arraylist);
+		vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FlowCompare,FlowCompare[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getLast().setFlowCompare(arraylist);
+		vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,Nh_check[0].length-1),tratio,(int) (24/this.demandTimeStep)));
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getLast().setSimDensity(arraylist);	
+		vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,Velocity[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getLast().setVelocity(arraylist);
+		vector = MyUtilities.meanRows(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,frFlow_Giv[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		arraylist = new ArrayList<Double>(Arrays.asList(vector));
+		cellData.getLast().setFrFlowNonImputed(arraylist);
 			
 	} // end of method run()
 	

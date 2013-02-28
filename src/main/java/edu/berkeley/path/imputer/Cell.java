@@ -16,7 +16,7 @@ public class Cell {
 	private ArrayList<Double> frFlowNonImputed = new ArrayList<Double>();
 	private ArrayList<Boolean> imputeOR = new ArrayList<Boolean>();
 	private ArrayList<Boolean> imputeFR = new ArrayList<Boolean>();
-	private ArrayList<Double> outFLow = new ArrayList<Double>();
+	private ArrayList<Double> outFlow = new ArrayList<Double>();
 	private ArrayList<Double> flowCompare = new ArrayList<Double>();
 	private ArrayList<Double> simDensity = new ArrayList<Double>();
 	private ArrayList<Double> onRampFlow = new ArrayList<Double>();
@@ -27,12 +27,26 @@ public class Cell {
 	private Double[][] measuredOfframpFlow = new Double[289][1]; 
 	private ArrayList<Double> Velocity = new ArrayList<Double>();
 	private ArrayList<Double> Demand = new ArrayList<Double>();
+	private ArrayList<Double> DJ = new ArrayList<Double>();
+	private ArrayList<Double> c = new ArrayList<Double>();
 	private ArrayList<Integer> onrampsPerLink = new ArrayList<Integer>();
 	private ArrayList<Integer> offrampsPerLink = new ArrayList<Integer>();
 	
 	// getters and setters
 	public LinkedList<Link> getLinks() {
 		return links;
+	}
+	public ArrayList<Double> getC() {
+		return c;
+	}
+	public void setC(ArrayList<Double> c) {
+		this.c = c;
+	}
+	public ArrayList<Double> getDJ() {
+		return DJ;
+	}
+	public void setDJ(ArrayList<Double> dJ) {
+		DJ = dJ;
 	}
 	public Double[][] getMeasuredOnrampFlow() {
 		return measuredOnrampFlow;
@@ -115,11 +129,11 @@ public class Cell {
 	public void setImputeFR(ArrayList<Boolean> imputeFR) {
 		this.imputeFR = imputeFR;
 	}
-	public ArrayList<Double> getOutFLow() {
-		return outFLow;
+	public ArrayList<Double> getOutFlow() {
+		return outFlow;
 	}
-	public void setOutFLow(ArrayList<Double> outFLow) {
-		this.outFLow = outFLow;
+	public void setOutFlow(ArrayList<Double> outFLow) {
+		this.outFlow = outFLow;
 	}
 	public ArrayList<Double> getFlowCompare() {
 		return flowCompare;
