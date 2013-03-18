@@ -6,7 +6,7 @@ import java.io.IOException;
 import javax.xml.bind.JAXBException;
 
 import core.DatabaseException;
-import edu.berkeley.path.beats.simulator.SiriusException;
+import edu.berkeley.path.beats.simulator.BeatsException;
 
 /**
  * Main method to call the imputer
@@ -20,10 +20,10 @@ public class ImputationRunner
 		         2010,  1,  2,  0,  0, org.joda.time.DateTimeZone.forID("America/Los_Angeles")
 		    );
 	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(24);
-	public static final String inputFileName = "C:\\Users\\gsr04\\Workspace\\imputer\\NetworkAConfig_NE.xml";
-	public static final String outputFileName = "C:\\Users\\gsr04\\Workspace\\imputer\\NetworkAConfig_NE_out.xml";
+	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
+	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
 	
-    public static void main ( String[] args ) throws JAXBException, SiriusException, DatabaseException, IOException
+    public static void main ( String[] args ) throws JAXBException, BeatsException, DatabaseException, IOException
     {
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();

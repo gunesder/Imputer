@@ -12,8 +12,8 @@ import org.joda.time.Interval;
 import core.DatabaseException;
 
 import edu.berkeley.path.beats.jaxb.*;
+import edu.berkeley.path.beats.simulator.BeatsException;
 import edu.berkeley.path.beats.simulator.JaxbObjectFactory;
-import edu.berkeley.path.beats.simulator.SiriusException;
 
 import edu.berkeley.path.model_elements.PeMSAggregate;
 import edu.berkeley.path.model_elements.PeMSStation;
@@ -109,7 +109,7 @@ public class Imputer {
 	}
 
 	// constructors
-	public Imputer(String inFileName, String outFileName, org.joda.time.DateTime startTime, org.joda.time.Duration totalTime) throws FileNotFoundException, JAXBException, SiriusException {
+	public Imputer(String inFileName, String outFileName, org.joda.time.DateTime startTime, org.joda.time.Duration totalTime) throws FileNotFoundException, JAXBException, BeatsException {
 		inputFileName = inFileName;
 		outputFileName = outFileName;
 		mainScenario = this.readAndUnmarshallXML();
@@ -123,12 +123,12 @@ public class Imputer {
 	 * @returns the schema
 	 * @throws SiriusException
 	 */
-	public static javax.xml.validation.Schema getSchema() throws SiriusException {
+	public static javax.xml.validation.Schema getSchema() throws BeatsException {
 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try {
 			return factory.newSchema(ObjectFactory.class.getClassLoader().getResource("sirius.xsd"));
 		} catch (org.xml.sax.SAXException exc) {
-			throw new SiriusException(exc);
+			throw new BeatsException(exc);
 		}
 	}
 	
@@ -138,7 +138,7 @@ public class Imputer {
 	 * @returns Scenario
 	 */
 	
-	public edu.berkeley.path.beats.jaxb.Scenario readAndUnmarshallXML() throws JAXBException, FileNotFoundException, SiriusException {
+	public edu.berkeley.path.beats.jaxb.Scenario readAndUnmarshallXML() throws JAXBException, FileNotFoundException, BeatsException {
 				
 		JAXBContext jaxbContext = JAXBContext.newInstance("edu.berkeley.path.beats.jaxb");
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -154,7 +154,7 @@ public class Imputer {
 	 * Marshalls a scenario object and writes into output XML file
 	 * @throws JAXBException, SiriusException
 	 */
-	public void marshallIntoXML(Scenario scenarioToWrite) throws JAXBException, FileNotFoundException, SiriusException {
+	public void marshallIntoXML(Scenario scenarioToWrite) throws JAXBException, FileNotFoundException, BeatsException {
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("edu.berkeley.path.beats.jaxb");
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
@@ -410,7 +410,7 @@ public class Imputer {
 		while (i < mainlineLinks.size()-1){
 			
 			if (mainlineLinks.get(i).isHasDetector() & mainlineLinks.get(i).getDetectorML().getHealthStatus() == 100){
-				Cell c = new Cell((int) totalTimeInHours*60/5+1);
+				Cell c = new Cell((int) totalTimeInHours*60/5);
 				c.addLink(mainlineLinks.get(i));
 				c.setDetectorML(mainlineLinks.get(i).getDetectorML());
 				c.setDetectorHOV(mainlineLinks.get(i).getDetectorHOV());
