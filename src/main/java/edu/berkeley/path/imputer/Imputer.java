@@ -1,6 +1,7 @@
 package edu.berkeley.path.imputer;
 
 import java.io.*;
+import java.sql.SQLException;
 import java.util.*; 
 
 import javax.xml.*;
@@ -15,12 +16,12 @@ import edu.berkeley.path.beats.jaxb.*;
 import edu.berkeley.path.beats.simulator.BeatsException;
 import edu.berkeley.path.beats.simulator.JaxbObjectFactory;
 
-import edu.berkeley.path.model_elements.PeMSAggregate;
-import edu.berkeley.path.model_elements.PeMSStation;
-import edu.berkeley.path.model_elements.PeMSStationAggregate;
-import edu.berkeley.path.scenario_database_access.DBParams;
-import edu.berkeley.path.scenario_database_access.PeMSStationAggregateReader;
-import edu.berkeley.path.scenario_database_access.PeMSStationReader;
+import edu.berkeley.path.model_objects.measurements.PeMSAggregate;
+import edu.berkeley.path.model_objects.measurements.VDS;
+import edu.berkeley.path.model_objects.measurements.PeMSStationAggregate;
+import edu.berkeley.path.model_database_access.DBParams;
+import edu.berkeley.path.model_database_access.measurements.PeMSStationAggregateReader;
+import edu.berkeley.path.model_database_access.measurements.VDSReader;
 
 /**
  * Top level imputer class
@@ -307,10 +308,10 @@ public class Imputer {
 	
 	/**
 	 * Reads the data from database and writes into detectors hashmap
-	 * @throws DatabaseException 
+	 * @throws SQLException 
 	 */
-	public void readDataIntoDetectorListFromDatabase() throws DatabaseException {
-		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader(new DBParams());
+	public void readDataIntoDetectorListFromDatabase() throws SQLException {
+		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader();
 		ArrayList<Long> vdsIDs = new ArrayList<Long>();
 		
 		for (int key: detectors.keySet()){
@@ -319,24 +320,24 @@ public class Imputer {
 		List<PeMSStationAggregate> stationsAggregate = stationAggregateReader.read(this.timeInterval,vdsIDs,PeMSAggregate.AggregationLevel.PEMS_5MIN);
 		
 		// Read absolute detector info into the hashmap
-		PeMSStationReader stationReader = new PeMSStationReader(new DBParams());
+		VDSReader stationReader = new VDSReader();
 		for (int key: detectors.keySet()){
-			PeMSStation station = stationReader.read((long) key);
+			VDS station = stationReader.read((long) key);
 			Detector d = detectors.get(key);
-			d.setAbsolutePM(station.getAbsPostmile());
+			d.setAbsolutePM(station.getAbsolutePostmile());
 			d.setDetectorLength(station.getDetectorLength());
 			d.setDetectorName(station.getDetectorName());		
 			d.setFreewayDirection(station.getDirection());
-			d.setFreewayNumber(station.getFwyNum());
-			d.setLatitude(station.getLatitude());
-			d.setLongitude(station.getLongitude());
+			d.setFreewayNumber(station.getFreewayNum());
+			d.setLatitude(station.getPosition().getPoint().get(0).getLat());
+			d.setLongitude(station.getPosition().getPoint().get(0).getLng());
 			d.setNumberOfLanes(station.getLaneCount());
 		}
 		
 		// Read 5 minute data into the hashmap
 		for (int i=0; i<stationsAggregate.size(); i++){
 			// find the detector corresponding to the current ID in the data vector and fill the fields accordingly
-			Detector d = detectors.get(stationsAggregate.get(i).getVdsId().intValue());
+			Detector d = detectors.get((int) stationsAggregate.get(i).getVdsId());
 			d.addDatumToSpeed(stationsAggregate.get(i).getTotal().getAvgSpeed());
 			d.addDatumToFlow(stationsAggregate.get(i).getTotal().getFlow()*12/d.getNumberOfLanes()); // to get the hourly rate at 5 minute granularity, multiply by 12
 			d.addDatumToDensity(stationsAggregate.get(i).getTotal().getFlow()*12/stationsAggregate.get(i).getTotal().getAvgSpeed()/d.getNumberOfLanes());

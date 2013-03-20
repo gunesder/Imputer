@@ -45,12 +45,12 @@
     </dependency>
     <dependency>
       <groupId>edu.berkeley.path</groupId>
-      <artifactId>model-elements</artifactId>
+      <artifactId>model-objects</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>edu.berkeley.path</groupId>
-      <artifactId>scenario-database-access</artifactId>
+      <artifactId>model-database-access</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
      <dependency>

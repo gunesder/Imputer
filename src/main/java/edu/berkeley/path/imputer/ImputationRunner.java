@@ -2,6 +2,7 @@ package edu.berkeley.path.imputer;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.xml.bind.JAXBException;
 
@@ -23,7 +24,7 @@ public class ImputationRunner
 	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
 	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
 	
-    public static void main ( String[] args ) throws JAXBException, BeatsException, DatabaseException, IOException
+    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException
     {
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();
