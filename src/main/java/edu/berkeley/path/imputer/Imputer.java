@@ -8,9 +8,14 @@ import javax.xml.*;
 import javax.xml.bind.*;
 import javax.xml.validation.SchemaFactory;
 
+import jxl.NumberCell;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+
 import org.joda.time.Interval;
 
 import core.DatabaseException;
+import core.oraDatabase;
 
 import edu.berkeley.path.beats.jaxb.*;
 import edu.berkeley.path.beats.simulator.BeatsException;
@@ -19,7 +24,8 @@ import edu.berkeley.path.beats.simulator.JaxbObjectFactory;
 import edu.berkeley.path.model_objects.measurements.PeMSAggregate;
 import edu.berkeley.path.model_objects.measurements.VDS;
 import edu.berkeley.path.model_objects.measurements.PeMSStationAggregate;
-import edu.berkeley.path.model_database_access.DBParams;
+//import edu.berkeley.path.model_database_access.DBParams;
+import edu.berkeley.path.model_database_access.TestConfiguration;
 import edu.berkeley.path.model_database_access.measurements.PeMSStationAggregateReader;
 import edu.berkeley.path.model_database_access.measurements.VDSReader;
 
@@ -311,7 +317,9 @@ public class Imputer {
 	 * @throws SQLException 
 	 */
 	public void readDataIntoDetectorListFromDatabase() throws SQLException {
-		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader();
+//		TestConfiguration.dbSetup();
+		
+		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader(oraDatabase.doConnect());
 		ArrayList<Long> vdsIDs = new ArrayList<Long>();
 		
 		for (int key: detectors.keySet()){
@@ -320,7 +328,7 @@ public class Imputer {
 		List<PeMSStationAggregate> stationsAggregate = stationAggregateReader.read(this.timeInterval,vdsIDs,PeMSAggregate.AggregationLevel.PEMS_5MIN);
 		
 		// Read absolute detector info into the hashmap
-		VDSReader stationReader = new VDSReader();
+		VDSReader stationReader = new VDSReader(oraDatabase.doConnect());
 		for (int key: detectors.keySet()){
 			VDS station = stationReader.read((long) key);
 			Detector d = detectors.get(key);
@@ -344,6 +352,47 @@ public class Imputer {
 			if(i<detectors.size()){
 				d.setHealthStatus(stationsAggregate.get(i).getTotal().getObserved());
 			}
+		}
+								
+	}
+	
+	/**
+	 * Reads the detector data from spreadsheet and writes into detectors hashmap
+	 * The files should be in the following format and placed in the root directory of the imputer project folder (for example, see detOutMainlines_431.csv)
+	 * 1) 5 minute data granularity is assumed 
+	 * 2) The data should be sorted by alphabetical order of detector IDs and the data column should be chronologically sorted for each detector
+	 * @throws IOException 
+	 * @throws BiffException 
+	 */
+	public void readDataIntoDetectorListFromSpreadSheet() throws BiffException, IOException {
+		
+		String filename = System.getProperty("user.dir") + "\\detOutMainlines_431.csv";
+		Workbook workbook = Workbook.getWorkbook(new File(filename));
+		
+		int rowIndex = 1; // start the index at 1 and increase by number of data points after each iteration
+		// Read absolute detector info and 5 minute data into the hashmap (some fields not important for fake detectors, left blank or 0 for the time being)
+		for (int key: detectors.keySet()){
+			Detector d = detectors.get(key);
+			NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(rowIndex, 4);
+			d.setAbsolutePM(nc.getValue());
+			d.setDetectorLength(0.0);
+			d.setDetectorName(workbook.getSheet(0).getCell(rowIndex, 1).toString());		
+			d.setFreewayDirection("");
+			d.setFreewayNumber(0);
+			d.setLatitude(0.0);
+			d.setLongitude(0.0);
+			NumberCell nc1 = (NumberCell) workbook.getSheet(0).getCell(rowIndex, 8);
+			Double temp = nc1.getValue();
+			d.setNumberOfLanes(temp.intValue());
+			for (int k=rowIndex; k<=rowIndex+totalTimeInHours*60/5; k++){
+				NumberCell ncSpeed = (NumberCell) workbook.getSheet(0).getCell(k, 6);
+				NumberCell ncFlow = (NumberCell) workbook.getSheet(0).getCell(k, 5);
+				d.addDatumToSpeed(ncSpeed.getValue());
+				d.addDatumToFlow(ncFlow.getValue()*12/d.getNumberOfLanes()); // to get the hourly rate at 5 minute granularity, multiply by 12
+				d.addDatumToDensity(ncFlow.getValue()*12/ncSpeed.getValue()/d.getNumberOfLanes());
+			}
+			d.setHealthStatus(1.0);
+			rowIndex += totalTimeInHours*60/5;
 		}
 								
 	}

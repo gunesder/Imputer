@@ -23,6 +23,8 @@ public class ImputationRunner
 	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(24);
 	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
 	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
+//	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12.xml";
+//	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12_out.xml";
 	
     public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException
     {

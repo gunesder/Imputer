@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.lang.*;
 import java.util.ArrayList;
 
-//import jxl.NumberCell;
-//import jxl.Workbook;
-//import jxl.read.biff.BiffException;
+import jxl.NumberCell;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
 
 public class MyUtilities {
 	
@@ -500,20 +500,20 @@ public class MyUtilities {
 		
 	}
 	
-//	public static Double[][] read2DArrayFromExcel(String filename) throws BiffException, IOException{
-//		
-//		Workbook workbook = Workbook.getWorkbook(new File(filename));
-//		Double[][] out = new Double[workbook.getSheet(0).getRows()][workbook.getSheet(0).getColumns()];
-//		for (int i=0;i<workbook.getSheet(0).getRows();i++){
-//			for (int j=0;j<workbook.getSheet(0).getColumns();j++){
-//				NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(j, i); 
-//				out[i][j] = (Double) nc.getValue();
-//			}
-//		}
-//		
-//		return out;	
-//		
-//	}
+	public static Double[][] read2DArrayFromExcel(String filename) throws BiffException, IOException{
+		
+		Workbook workbook = Workbook.getWorkbook(new File(filename));
+		Double[][] out = new Double[workbook.getSheet(0).getRows()][workbook.getSheet(0).getColumns()];
+		for (int i=0;i<workbook.getSheet(0).getRows();i++){
+			for (int j=0;j<workbook.getSheet(0).getColumns();j++){
+				NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(j, i); 
+				out[i][j] = (Double) nc.getValue();
+			}
+		}
+		
+		return out;	
+		
+	}
 	
 	public static Double[][] reshapeVectorIntoMatrix(Double[] v, int m, int n){
 		Double[][] out = new Double[m][n];
