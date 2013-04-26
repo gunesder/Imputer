@@ -37,6 +37,7 @@ public class ImputationRunner
     	imp.calibrateFundemantalDiagrams();
     	imp.createCellStructure();
     	imp.runImputation();
+    	imp.splitMegaCells();
     	imp.marshallIntoXML(imp.getMainScenario());
     }
 }

@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario id="1" name="Testing1" schemaVersion="1.0.19">
+  <NetworkList>
+    <network name="Testing" dt="6" id="2">
+    
+    <position>
+      <point lat="0.010066" lng="178.524585"/>
+    </position>
+    <NodeList>
+      <node type="simple" id="-334">
+        <outputs>
+          <output link_id="-327"/>
+        </outputs>
+        <inputs>
+          <input link_id="-333"/>
+        </inputs>
+        <position>
+          <point lat="0.0100659" lng="178.5245853"/>
+        </position>
+      </node>
+      <node type="terminal" id="-413">
+        <outputs/>
+        <inputs/>
+        <position>
+          <point lat="0.00949654" lng="178.5301161"/>
+        </position>
+      </node>
+      <node type="simple" id="-330">
+        <outputs>
+          <output link_id="-328"/>
+		  <output link_id="-329"/>
+        </outputs>
+        <inputs>
+          <input link_id="-1046"/>
+        </inputs>
+        <position>
+          <point lat="0.0100269" lng="178.52693452"/>
+        </position>
+      </node>
+      <node type="simple" id="-358">
+        <outputs>
+          <output link_id="-357"/>
+        </outputs>
+        <inputs>
+          <input link_id="-328"/>
+        </inputs>
+        <position>
+          <point lat="0.0100456" lng="178.53021141"/>
+        </position>
+      </node>
+	  <node type="simple" id="-1047">
+        <outputs>
+          <output link_id="-1046"/>
+        </outputs>
+        <inputs>
+          <input link_id="-327"/>
+        </inputs>
+        <position>
+          <point lat="0.01004996" lng="178.52553444"/>
+        </position>
+      </node>
+      <node type="terminal" id="-414">
+        <outputs/>
+        <inputs/>
+        <position>
+          <point lat="0.01003301" lng="178.5325127"/>
+        </position>
+      </node>
+      <node type="terminal" id="-412">
+        <outputs/>
+        <inputs/>
+        <position>
+          <point lat="0.01006448" lng="178.52261894"/>
+        </position>
+      </node>
+    </NodeList>
+    <LinkList>
+      <link lanes="4" length="0.111697" type="freeway" id="-333">
+        
+        <begin node_id="-412"/>
+        <end node_id="-334"/>
+		<dynamics type="CTM"/>
+        
+      </link>
+      <link lanes="4" length="0.063798" type="freeway" id="-327">
+        
+        <begin node_id="-334"/>
+        <end node_id="-1047"/>
+		<dynamics type="CTM"/>
+        
+      </link>
+      <link lanes="5" length="0.093872" type="freeway" id="-1046">
+        
+        <begin node_id="-1047"/>
+        <end node_id="-330"/>
+		<dynamics type="CTM"/>
+        
+      </link>
+      <link lanes="4" length="0.224215" type="freeway" id="-328">
+        
+        <begin node_id="-330"/>
+        <end node_id="-358"/>
+		<dynamics type="CTM"/>
+        
+      </link>
+      <link lanes="1" length="0.209262" type="offramp" id="-329">
+        
+        <begin node_id="-330"/>
+        <end node_id="-413"/>
+		<dynamics type="CTM"/>
+        
+      </link>
+      <link lanes="4" length="0.143443" type="freeway" id="-357">
+        
+        <begin node_id="-358"/>
+        <end node_id="-414"/>
+		<dynamics type="CTM"/>
+        
+      </link>
+    </LinkList>
+	
+  </network>
+  </NetworkList>
+  <SensorList>
+      <sensor id="-352" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.0097648" lng="178.52832087"/>
+        </display_position>
+		<link_reference id="-329"/>
+        <parameters>
+          <parameter name="data_id" value="352"/>
+		  <parameter name="link_type" value="offramp"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="1"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="502.5818"/>
+          <parameter name="vds" value="401860"/>
+          <parameter name="postmile" value="28.5001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-353" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.0099873" lng="178.52845699"/>
+        </display_position>
+		<link_reference id="-328"/>
+        <parameters>
+          <parameter name="data_id" value="353"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="545.2817"/>
+          <parameter name="vds" value="401651"/>
+          <parameter name="postmile" value="29.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-354" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.0099873" lng="178.52845775"/>
+        </display_position>
+		<link_reference id="-328"/>
+        <parameters>
+          <parameter name="data_id" value="354"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="545.5612"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="29.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-355" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.0099873" lng="178.52845718"/>
+        </display_position>
+		<link_reference id="-328"/>
+        <parameters>
+          <parameter name="data_id" value="355"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="545.3507"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="29.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-356" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00998731" lng="178.52845538"/>
+        </display_position>
+		<link_reference id="-328"/>
+        <parameters>
+          <parameter name="data_id" value="356"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="544.6919"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="29.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-336" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999639" lng="178.52342183"/>
+        </display_position>
+		<link_reference id="-333"/>
+        <parameters>
+          <parameter name="data_id" value="336"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="168.7922"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="27.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-337" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999639" lng="178.52342199"/>
+        </display_position>
+		<link_reference id="-333"/>
+        <parameters>
+          <parameter name="data_id" value="337"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="168.8509"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="27.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-338" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999639" lng="178.52342161"/>
+        </display_position>
+		<link_reference id="-333"/>
+        <parameters>
+          <parameter name="data_id" value="338"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="168.7122"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="27.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-339" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999639" lng="178.52342219"/>
+        </display_position>
+		<link_reference id="-333"/>
+        <parameters>
+          <parameter name="data_id" value="339"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="168.9238"/>
+          <parameter name="vds" value="401876"/>
+          <parameter name="postmile" value="27.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-348" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999944" lng="178.52495584"/>
+        </display_position>
+		<link_reference id="-327"/>
+        <parameters>
+          <parameter name="data_id" value="348"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="130.6375"/>
+          <parameter name="vds" value="401928"/>
+          <parameter name="postmile" value="28.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-349" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999945" lng="178.52495506"/>
+        </display_position>
+		<link_reference id="-327"/>
+        <parameters>
+          <parameter name="data_id" value="349"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="130.3516"/>
+          <parameter name="vds" value="401928"/>
+          <parameter name="postmile" value="28.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-350" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999945" lng="178.5249546"/>
+        </display_position>
+		<link_reference id="-327"/>
+        <parameters>
+          <parameter name="data_id" value="350"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="130.1837"/>
+          <parameter name="vds" value="401928"/>
+          <parameter name="postmile" value="28.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+      <sensor id="-351" type="loop">
+        <display_position>
+          <point elevation="0" lat="0.00999945" lng="178.5249546"/>
+        </display_position>
+		<link_reference id="-327"/>
+        <parameters>
+          <parameter name="data_id" value="351"/>
+		  <parameter name="link_type" value="freeway"/>
+		  <parameter name="start_time" value="0"/>
+		  <parameter name="length" value="0"/>
+          <parameter name="lanes" value="4"/>
+          <parameter name="hwy_name" value="101"/>
+          <parameter name="offset_in_link" value="130.1828"/>
+          <parameter name="vds" value="401928"/>
+          <parameter name="postmile" value="28.0001"/>
+        </parameters>
+        <table name="data_sources">
+			<column_names>
+			  <column_name name="url" key="false"/>
+			  <column_name name="dt" key="false"/>
+			  <column_name name="format" key="false"/>
+			</column_names>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_02.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+			<row>
+			  <column>file:\\\C:\Users\gomes\TrafficData\PeMSDataClearingHouse_5min\d07_text_station_5min_2009_02_27.txt</column>
+			  <column>300</column>
+			  <column>PeMS Data Clearinghouse</column>
+			</row>
+		</table>
+      </sensor>
+    </SensorList>
+  <InitialDensitySet/>
+  <SplitRatioProfileSet/>
+  <FundamentalDiagramProfileSet/>
+  <EventSet/>
+  <DemandProfileSet/>
+  <ControllerSet/>
+</scenario>

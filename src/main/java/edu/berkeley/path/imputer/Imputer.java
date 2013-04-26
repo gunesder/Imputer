@@ -483,12 +483,20 @@ public class Imputer {
 		
 	}
 	
-//	public void splitMegaCells(){
-//		
+	public void splitMegaCells(){
+		
 //		MegaCellSplitter splitter = new MegaCellSplitter(imputedCells,detectors);
 //		splitter.run();
 //		this.splitCells = splitter.getSplitCellData();
-//	}
+		
+		splitCells = imputedCells; // for the test network, no splitting is required, so we temporarily do this
+		
+	}
+	
+	public void arrangeOutputs(){
+		
+	}
+	
 	
 	
 	
