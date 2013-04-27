@@ -23,8 +23,8 @@ public class Cell {
 	private ArrayList<Double> offRampFlow = new ArrayList<Double>();
 	private ArrayList<Double> beta = new ArrayList<Double>();
 	private ArrayList<Double> onRampInput = new ArrayList<Double>();
-	private Double[][] measuredOnrampFlow = new Double[289][1]; 
-	private Double[][] measuredOfframpFlow = new Double[289][1]; 
+	private Double[][] measuredOnrampFlow = new Double[288][1]; 
+	private Double[][] measuredOfframpFlow = new Double[288][1]; 
 	private ArrayList<Double> Velocity = new ArrayList<Double>();
 	private ArrayList<Double> Demand = new ArrayList<Double>();
 	private ArrayList<Double> DJ = new ArrayList<Double>();

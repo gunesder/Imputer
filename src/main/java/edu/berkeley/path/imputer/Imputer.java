@@ -1,26 +1,33 @@
 package edu.berkeley.path.imputer;
 
 import java.io.*;
+import java.sql.SQLException;
 import java.util.*; 
 
 import javax.xml.*;
 import javax.xml.bind.*;
 import javax.xml.validation.SchemaFactory;
 
+import jxl.NumberCell;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+
 import org.joda.time.Interval;
 
 import core.DatabaseException;
+import core.oraDatabase;
 
 import edu.berkeley.path.beats.jaxb.*;
+import edu.berkeley.path.beats.simulator.BeatsException;
 import edu.berkeley.path.beats.simulator.JaxbObjectFactory;
-import edu.berkeley.path.beats.simulator.SiriusException;
 
-import edu.berkeley.path.model_elements.PeMSAggregate;
-import edu.berkeley.path.model_elements.PeMSStation;
-import edu.berkeley.path.model_elements.PeMSStationAggregate;
-import edu.berkeley.path.scenario_database_access.DBParams;
-import edu.berkeley.path.scenario_database_access.PeMSStationAggregateReader;
-import edu.berkeley.path.scenario_database_access.PeMSStationReader;
+import edu.berkeley.path.model_objects.measurements.PeMSAggregate;
+import edu.berkeley.path.model_objects.measurements.VDS;
+import edu.berkeley.path.model_objects.measurements.PeMSStationAggregate;
+//import edu.berkeley.path.model_database_access.DBParams;
+import edu.berkeley.path.model_database_access.TestConfiguration;
+import edu.berkeley.path.model_database_access.measurements.PeMSStationAggregateReader;
+import edu.berkeley.path.model_database_access.measurements.VDSReader;
 
 /**
  * Top level imputer class
@@ -123,7 +130,7 @@ public class Imputer {
 	}
 
 	// constructors
-	public Imputer(String inFileName, String outFileName, org.joda.time.DateTime startTime, org.joda.time.Duration totalTime) throws FileNotFoundException, JAXBException, SiriusException {
+	public Imputer(String inFileName, String outFileName, org.joda.time.DateTime startTime, org.joda.time.Duration totalTime) throws FileNotFoundException, JAXBException, BeatsException {
 		inputFileName = inFileName;
 		outputFileName = outFileName;
 		mainScenario = this.readAndUnmarshallXML();
@@ -137,12 +144,12 @@ public class Imputer {
 	 * @returns the schema
 	 * @throws SiriusException
 	 */
-	public static javax.xml.validation.Schema getSchema() throws SiriusException {
+	public static javax.xml.validation.Schema getSchema() throws BeatsException {
 		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try {
 			return factory.newSchema(ObjectFactory.class.getClassLoader().getResource("sirius.xsd"));
 		} catch (org.xml.sax.SAXException exc) {
-			throw new SiriusException(exc);
+			throw new BeatsException(exc);
 		}
 	}
 	
@@ -152,7 +159,7 @@ public class Imputer {
 	 * @returns Scenario
 	 */
 	
-	public edu.berkeley.path.beats.jaxb.Scenario readAndUnmarshallXML() throws JAXBException, FileNotFoundException, SiriusException {
+	public edu.berkeley.path.beats.jaxb.Scenario readAndUnmarshallXML() throws JAXBException, FileNotFoundException, BeatsException {
 				
 		JAXBContext jaxbContext = JAXBContext.newInstance("edu.berkeley.path.beats.jaxb");
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -168,7 +175,7 @@ public class Imputer {
 	 * Marshalls a scenario object and writes into output XML file
 	 * @throws JAXBException, SiriusException
 	 */
-	public void marshallIntoXML(Scenario scenarioToWrite) throws JAXBException, FileNotFoundException, SiriusException {
+	public void marshallIntoXML(Scenario scenarioToWrite) throws JAXBException, FileNotFoundException, BeatsException {
 		
 		JAXBContext jaxbContext = JAXBContext.newInstance("edu.berkeley.path.beats.jaxb");
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
@@ -321,10 +328,12 @@ public class Imputer {
 	
 	/**
 	 * Reads the data from database and writes into detectors hashmap
-	 * @throws DatabaseException 
+	 * @throws SQLException 
 	 */
-	public void readDataIntoDetectorListFromDatabase() throws DatabaseException {
-		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader(new DBParams());
+	public void readDataIntoDetectorListFromDatabase() throws SQLException {
+//		TestConfiguration.dbSetup();
+		
+		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader(oraDatabase.doConnect());
 		ArrayList<Long> vdsIDs = new ArrayList<Long>();
 		
 		for (int key: detectors.keySet()){
@@ -333,30 +342,75 @@ public class Imputer {
 		List<PeMSStationAggregate> stationsAggregate = stationAggregateReader.read(this.timeInterval,vdsIDs,PeMSAggregate.AggregationLevel.PEMS_5MIN);
 		
 		// Read absolute detector info into the hashmap
-		PeMSStationReader stationReader = new PeMSStationReader(new DBParams());
+		VDSReader stationReader = new VDSReader(oraDatabase.doConnect());
 		for (int key: detectors.keySet()){
-			PeMSStation station = stationReader.read((long) key);
+			VDS station = stationReader.read((long) key);
 			Detector d = detectors.get(key);
-			d.setAbsolutePM(station.getAbsPostmile());
+			d.setAbsolutePM(station.getAbsolutePostmile());
 			d.setDetectorLength(station.getDetectorLength());
 			d.setDetectorName(station.getDetectorName());		
 			d.setFreewayDirection(station.getDirection());
-			d.setFreewayNumber(station.getFwyNum());
-			d.setLatitude(station.getLatitude());
-			d.setLongitude(station.getLongitude());
+			d.setFreewayNumber(station.getFreewayNum());
+			d.setLatitude(station.getPosition().getPoint().get(0).getLat());
+			d.setLongitude(station.getPosition().getPoint().get(0).getLng());
 			d.setNumberOfLanes(station.getLaneCount());
 		}
 		
 		// Read 5 minute data into the hashmap
 		for (int i=0; i<stationsAggregate.size(); i++){
 			// find the detector corresponding to the current ID in the data vector and fill the fields accordingly
-			Detector d = detectors.get(stationsAggregate.get(i).getVdsId().intValue());
+			Detector d = detectors.get((int) stationsAggregate.get(i).getVdsId());
 			d.addDatumToSpeed(stationsAggregate.get(i).getTotal().getAvgSpeed());
 			d.addDatumToFlow(stationsAggregate.get(i).getTotal().getFlow()*12/d.getNumberOfLanes()); // to get the hourly rate at 5 minute granularity, multiply by 12
 			d.addDatumToDensity(stationsAggregate.get(i).getTotal().getFlow()*12/stationsAggregate.get(i).getTotal().getAvgSpeed()/d.getNumberOfLanes());
 			if(i<detectors.size()){
 				d.setHealthStatus(stationsAggregate.get(i).getTotal().getObserved());
 			}
+		}
+								
+	}
+	
+	/**
+	 * Reads the detector data from spreadsheet and writes into detectors hashmap
+	 * The files should be in the following format and placed in the root directory of the imputer project folder (for example, see detOutMainlines_431.csv)
+	 * 1) 5 minute data granularity is assumed 
+	 * 2) The data should be sorted by alphabetical order of detector IDs and the data column should be chronologically sorted for each detector
+	 * @throws IOException 
+	 * @throws BiffException 
+	 */
+	public void readDataIntoDetectorListFromSpreadSheet() throws BiffException, IOException {
+		
+		String filename = System.getProperty("user.dir") + "\\detOutMainlines_431.xls";
+		Workbook workbook = Workbook.getWorkbook(new File(filename));
+		
+		int rowIndex = 1; // start the index at 1 and increase by number of data points after each iteration
+		// Read absolute detector info and 5 minute data into the hashmap (some fields not important for fake detectors, left blank or 0 for the time being)
+		for (int key: detectors.keySet()){
+			Detector d = detectors.get(key);
+			NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(4, rowIndex);
+			d.setAbsolutePM(nc.getValue());
+			d.setDetectorLength(0.0);
+			d.setDetectorName(workbook.getSheet(0).getCell(1, rowIndex).toString());		
+			d.setFreewayDirection("");
+			d.setFreewayNumber(0);
+			d.setLatitude(0.0);
+			d.setLongitude(0.0);
+			NumberCell nc1 = (NumberCell) workbook.getSheet(0).getCell(8, rowIndex);
+			Double temp = nc1.getValue();
+			d.setNumberOfLanes(temp.intValue());
+			for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
+				NumberCell ncSpeed = (NumberCell) workbook.getSheet(0).getCell(6, k);
+				NumberCell ncFlow = (NumberCell) workbook.getSheet(0).getCell(5, k);
+				d.addDatumToSpeed(ncSpeed.getValue());
+				d.addDatumToFlow(ncFlow.getValue()/d.getNumberOfLanes()); // to get the hourly rate at 5 minute granularity, multiply by 12
+				d.addDatumToDensity(ncFlow.getValue()/ncSpeed.getValue()/d.getNumberOfLanes());
+			}
+			if (key == 352) {
+				d.setHealthStatus(0.0);
+			} else {
+				d.setHealthStatus(100.0);
+			}
+			rowIndex += totalTimeInHours*60/5;
 		}
 								
 	}
@@ -424,7 +478,7 @@ public class Imputer {
 		while (i < mainlineLinks.size()-1){
 			
 			if (mainlineLinks.get(i).isHasDetector() & mainlineLinks.get(i).getDetectorML().getHealthStatus() == 100){
-				Cell c = new Cell((int) totalTimeInHours*60/5+1);
+				Cell c = new Cell((int) totalTimeInHours*60/5);
 				c.addLink(mainlineLinks.get(i));
 				c.setDetectorML(mainlineLinks.get(i).getDetectorML());
 				c.setDetectorHOV(mainlineLinks.get(i).getDetectorHOV());

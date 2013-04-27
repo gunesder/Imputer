@@ -3,7 +3,7 @@ package edu.berkeley.path.imputer;
 import java.io.IOException;
 import java.util.*;
 
-import jxl.read.biff.BiffException;
+//import jxl.read.biff.BiffException;
 
 import lpsolve.LpSolve;
 import lpsolve.LpSolveException;
@@ -33,11 +33,11 @@ public class ImputationCoreAlgorithm {
 		private ArrayList<Boolean> orPresent = new ArrayList<Boolean>();
 		private ArrayList<Boolean> frPresent = new ArrayList<Boolean>();
 		// derived fields (matrix quantities)
-		private Double[][] measuredDensity = new Double[289][1];
-		private Double[][] measuredFlow = new Double[289][1];
-		private Double[][] measuredSpeed = new Double[289][1];
-		private Double[][] measuredOrFlow = new Double[289][1];
-		private Double[][] measuredFrFlow = new Double[289][1];		
+		private Double[][] measuredDensity = new Double[288][1];
+		private Double[][] measuredFlow = new Double[288][1];
+		private Double[][] measuredSpeed = new Double[288][1];
+		private Double[][] measuredOrFlow = new Double[288][1];
+		private Double[][] measuredFrFlow = new Double[288][1];		
 		// learning algorithm parameters
 	
 	// getters and setters
@@ -205,6 +205,10 @@ public class ImputationCoreAlgorithm {
 			
 			i++;
 		}
+		
+//		imputeFR.clear();
+//		imputeFR.add(true);
+//		imputeFR.add(false);
 		
 		measuredSpeed = MyUtilities.interpolateMatrix(measuredSpeed, (int) (24/this.simulationTimeStep));
 		measuredFlow = MyUtilities.interpolateMatrix(measuredFlow, (int) (24/this.simulationTimeStep));
