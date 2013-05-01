@@ -460,7 +460,7 @@ public class Imputer {
 	/**
 	 * Calibrates fundamental diagram parameters for detectors
 	 */
-	public void calibrateFundemantalDiagrams() {
+	public void calibrateFundamentalDiagrams() {
 		for (int key: detectors.keySet()){
 			FDCalibrator fdCalib = new FDCalibrator();
 			detectors.put(key, fdCalib.calibrateParameters(detectors.get(key)));
@@ -548,6 +548,10 @@ public class Imputer {
 	}
 	
 	public void arrangeOutputs(){
+		
+	}
+	public void readFundamentalDiagramsFromXML_AIMSUN() {
+		// TODO Auto-generated method stub
 		
 	}
 	
