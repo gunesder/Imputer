@@ -22,7 +22,7 @@ public class ImputationRunner
 			  // YYYY, MM, DD, HH, MM, TIME ZONE
 		         2010,  1,  2,  0,  0, org.joda.time.DateTimeZone.forID("America/Los_Angeles")
 		    );
-	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(1);
+	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(24);
 //	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
 //	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
 	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12.xml";
@@ -40,12 +40,9 @@ public class ImputationRunner
     	imp.readDataIntoDetectorListFromSpreadSheet();
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
-//    	imp.calibrateFundamentalDiagrams();
-    	// imp.readFundamentalDiagramsFromXML();
-    	imp.readFundamentalDiagramsFromXML_AIMSUN();
+    	imp.calibrateFundemantalDiagrams();
     	imp.createCellStructure();
     	imp.runImputation();
-    	imp.splitMegaCells();
     	imp.marshallIntoXML(imp.getMainScenario());
     }
 }
