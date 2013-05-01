@@ -6,6 +6,8 @@ import java.sql.SQLException;
 
 import javax.xml.bind.JAXBException;
 
+import jxl.read.biff.BiffException;
+
 import core.DatabaseException;
 import edu.berkeley.path.beats.simulator.BeatsException;
 
@@ -21,12 +23,12 @@ public class ImputationRunner
 		         2010,  1,  2,  0,  0, org.joda.time.DateTimeZone.forID("America/Los_Angeles")
 		    );
 	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(24);
-	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
-	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
-//	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12.xml";
-//	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12_out.xml";
+//	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
+//	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
+	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12.xml";
+	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12_out.xml";
 	
-    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException
+    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException, BiffException
     {
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();
@@ -34,7 +36,8 @@ public class ImputationRunner
     	imp.createNodeStructureFromMainScenario();
     	imp.createLinkStructureFromMainScenario();
     	imp.createMainlineLinkStructureFromMainScenario();
-    	imp.readDataIntoDetectorListFromDatabase();
+//    	imp.readDataIntoDetectorListFromDatabase();
+    	imp.readDataIntoDetectorListFromSpreadSheet();
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
     	imp.calibrateFundemantalDiagrams();
