@@ -1,6 +1,7 @@
 package edu.berkeley.path.imputer;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*; 
 
@@ -472,7 +473,22 @@ public class Imputer {
 	 * Reads fundamental diagram parameters from AIMSUN generated xml
 	 */
 	public void readFundamentalDiagramsFromXML_AIMSUN() {
-		// TODO Auto-generated method stub
+		for (int key: detectors.keySet()){
+			Detector d = detectors.get(key);
+			// find the corresponding FD profile
+			int i;
+			for (i=0;i<this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().size();i++){
+				if (Integer.parseInt(this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getSensorId()) == key){
+					break;
+				}
+			}
+			BigDecimal vf = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getFreeFlowSpeed();
+			double w = 0.0;
+			BigDecimal q_max = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getCapacity();
+			d.getFdParams().setFD(vf.doubleValue(), w, q_max.doubleValue());
+			detectors.put(key, d);
+		}
+		
 		
 	}
 	
