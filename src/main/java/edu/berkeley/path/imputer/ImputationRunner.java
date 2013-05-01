@@ -40,7 +40,9 @@ public class ImputationRunner
     	imp.readDataIntoDetectorListFromSpreadSheet();
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
-    	imp.calibrateFundemantalDiagrams();
+//    	imp.calibrateFundamentalDiagrams();
+//    	imp.readFundamentalDiagramsFromXML();
+    	imp.readFundamentalDiagramsFromXML_AIMSUN();
     	imp.createCellStructure();
     	imp.runImputation();
     	imp.marshallIntoXML(imp.getMainScenario());

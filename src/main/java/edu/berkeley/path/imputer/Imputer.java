@@ -469,6 +469,14 @@ public class Imputer {
 	}
 	
 	/**
+	 * Reads fundamental diagram parameters from AIMSUN generated xml
+	 */
+	public void readFundamentalDiagramsFromXML_AIMSUN() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/**
 	 * Translates the link structure into the cell structure depending on healthy detector locations
 	 */
 	public void createCellStructure() {
@@ -550,10 +558,7 @@ public class Imputer {
 	public void arrangeOutputs(){
 		
 	}
-	public void readFundamentalDiagramsFromXML_AIMSUN() {
-		// TODO Auto-generated method stub
-		
-	}
+	
 	
 	
 	
