@@ -12,8 +12,11 @@ import javax.xml.validation.SchemaFactory;
 import jxl.NumberCell;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
-//import jxl.Workbook;
-//import jxl.read.biff.BiffException;
+import jxl.write.Label;
+import jxl.write.Number;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
 
 import org.joda.time.Interval;
 
@@ -28,6 +31,7 @@ import edu.berkeley.path.model_objects.measurements.PeMSAggregate;
 import edu.berkeley.path.model_objects.measurements.VDS;
 import edu.berkeley.path.model_objects.measurements.PeMSStationAggregate;
 //import edu.berkeley.path.model_database_access.DBParams;
+import edu.berkeley.path.model_database_access.TestConfiguration;
 import edu.berkeley.path.model_database_access.measurements.PeMSStationAggregateReader;
 import edu.berkeley.path.model_database_access.measurements.VDSReader;
 
@@ -333,7 +337,8 @@ public class Imputer {
 	 * @throws SQLException 
 	 */
 	public void readDataIntoDetectorListFromDatabase() throws SQLException {
-//		TestConfiguration.dbSetup();
+
+		// TestConfiguration.dbSetup();
 		
 		PeMSStationAggregateReader stationAggregateReader = new PeMSStationAggregateReader(oraDatabase.doConnect());
 		ArrayList<Long> vdsIDs = new ArrayList<Long>();
@@ -380,9 +385,8 @@ public class Imputer {
 	 * @throws IOException 
 	 * @throws BiffException 
 	 */
-	public void readDataIntoDetectorListFromSpreadSheet() throws BiffException, IOException {
+	public void readDataIntoDetectorListFromSpreadSheet(String filename) throws BiffException, IOException {
 		
-		String filename = System.getProperty("user.dir") + "\\detOutMainlines_431.xls";
 		Workbook workbook = Workbook.getWorkbook(new File(filename));
 		
 		int rowIndex = 1; // start the index at 1 and increase by number of data points after each iteration
@@ -392,19 +396,19 @@ public class Imputer {
 			NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(4, rowIndex);
 			d.setAbsolutePM(nc.getValue());
 			d.setDetectorLength(0.0);
-			d.setDetectorName(workbook.getSheet(0).getCell(1, rowIndex).toString());		
+			d.setDetectorName(workbook.getSheet(0).getCell(1, rowIndex).getContents());		
 			d.setFreewayDirection("");
 			d.setFreewayNumber(0);
 			d.setLatitude(0.0);
 			d.setLongitude(0.0);
-			NumberCell nc1 = (NumberCell) workbook.getSheet(0).getCell(8, rowIndex);
+			NumberCell nc1 = (NumberCell) workbook.getSheet(0).getCell(13, rowIndex);
 			Double temp = nc1.getValue();
 			d.setNumberOfLanes(temp.intValue());
 			for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
 				NumberCell ncSpeed = (NumberCell) workbook.getSheet(0).getCell(6, k);
 				NumberCell ncFlow = (NumberCell) workbook.getSheet(0).getCell(5, k);
 				d.addDatumToSpeed(ncSpeed.getValue());
-				d.addDatumToFlow(ncFlow.getValue()/d.getNumberOfLanes()); // to get the hourly rate at 5 minute granularity, multiply by 12
+				d.addDatumToFlow(ncFlow.getValue()/d.getNumberOfLanes());
 				d.addDatumToDensity(ncFlow.getValue()/ncSpeed.getValue()/d.getNumberOfLanes());
 			}
 			if (key == 352) {
@@ -474,21 +478,22 @@ public class Imputer {
 	 * Reads fundamental diagram parameters from AIMSUN generated xml
 	 */
 	public void readFundamentalDiagramsFromXML_AIMSUN() {
-//		for (int key: detectors.keySet()){
-//			Detector d = detectors.get(key);
-//			// find the corresponding FD profile
-//			int i;
-//			for (i=0;i<this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().size();i++){
-//				if (Integer.parseInt(this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getSensorId()) == key){
-//					break;
-//				}
-//			}
-//			BigDecimal vf = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getFreeFlowSpeed();
-//			double w = 0.0;
-//			BigDecimal q_max = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getCapacity();
-//			d.getFdParams().setFD(vf.doubleValue(), w, q_max.doubleValue());
-//			detectors.put(key, d);
-//		}
+		for (int key: detectors.keySet()){
+			Detector d = detectors.get(key);
+			// find the corresponding FD profile
+			int i;
+			for (i=0;i<this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().size();i++){
+				if (Integer.parseInt(this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getLinkId()) == d.getLinkAssoc()){
+					break;
+				}
+			}
+			BigDecimal vf = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getFreeFlowSpeed();
+			BigDecimal q_max = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getCapacity();
+			BigDecimal rhojam = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getJamDensity();
+			double w = q_max.doubleValue()/(rhojam.doubleValue()-q_max.doubleValue()/vf.doubleValue());
+			d.getFdParams().setFD(vf.doubleValue(), w, q_max.doubleValue()/d.getNumberOfLanes());
+			detectors.put(key, d);
+		}
 		
 		
 	}
@@ -556,7 +561,7 @@ public class Imputer {
 	 */
 	public void runImputation(){
 		
-		ImputationCoreAlgorithm imp_algo = new ImputationCoreAlgorithm(cells,detectors);
+		ImputationCoreAlgorithm imp_algo = new ImputationCoreAlgorithm(cells,detectors,totalTimeInHours);
 		imp_algo.run();
 		this.imputedCells = imp_algo.getCellData();
 		
@@ -575,10 +580,42 @@ public class Imputer {
 	public void arrangeOutputs(){
 		
 	}
+	public void writeDemandsAndSplitRatiosToSpreadSheet(String outFilename) throws BiffException, IOException, RowsExceededException, WriteException, IndexOutOfBoundsException {
+		
+		WritableWorkbook workbook = Workbook.createWorkbook(new File(outFilename));
+		
+		workbook.createSheet("Sheet1", 0);
+		// add labels first row
+		workbook.getSheet(0).addCell(new Label(0,0,"Detector Name (cell)"));
+		workbook.getSheet(0).addCell(new Label(1,0,"Split Ratios"));
+		workbook.getSheet(0).addCell(new Label(2,0,"Offramp Flows"));
+		workbook.getSheet(0).addCell(new Label(3,0,"Demands"));
+		workbook.getSheet(0).addCell(new Label(4,0,"Flows"));
+		workbook.getSheet(0).addCell(new Label(5,0,"Speeds"));
+		int rowIndex = 1;
+		for (Cell c: splitCells){
+			
+			// detector name
+			workbook.getSheet(0).addCell(new Label(0,rowIndex,c.getDetectorML().getDetectorName().toString()));
+			
+			// fill in data vectors
+			for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
+				
+				workbook.getSheet(0).addCell(new Number(1,k,c.getBeta().get(k-rowIndex)));
+				workbook.getSheet(0).addCell(new Number(2,k,c.getOffRampFlow().get(k-rowIndex)));
+				workbook.getSheet(0).addCell(new Number(3,k,c.getOnRampInput().get(k-rowIndex)));
+				workbook.getSheet(0).addCell(new Number(4,k,c.getFlowCompare().get(k-rowIndex)));
+				workbook.getSheet(0).addCell(new Number(5,k,c.getVelocity().get(k-rowIndex)));
+				
+			}
+			
+			rowIndex += totalTimeInHours*60/5;
+			
+		}
+		
+		workbook.write();
+		workbook.close();
+		
+	}
 	
-	
-	
-	
-	
-
 }

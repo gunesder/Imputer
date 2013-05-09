@@ -6,7 +6,9 @@ import java.sql.SQLException;
 
 import javax.xml.bind.JAXBException;
 
-//import jxl.read.biff.BiffException;
+import jxl.read.biff.BiffException;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
 
 import core.DatabaseException;
 import edu.berkeley.path.beats.simulator.BeatsException;
@@ -25,10 +27,10 @@ public class ImputationRunner
 	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(1);
 //	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
 //	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
-	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12.xml";
-	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12_out.xml";
+	public static final String inputFileName = System.getProperty("user.dir") + "\\Aimsun\\ImputationCode_1202.xml";
+	public static final String outputFileName = System.getProperty("user.dir") + "\\Aimsun\\ImputationCode_1202_out.xml";
 	
-    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException
+    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException, BiffException, RowsExceededException, WriteException, IndexOutOfBoundsException
     {
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();
@@ -37,14 +39,16 @@ public class ImputationRunner
     	imp.createLinkStructureFromMainScenario();
     	imp.createMainlineLinkStructureFromMainScenario();
 //    	imp.readDataIntoDetectorListFromDatabase();
-//    	imp.readDataIntoDetectorListFromSpreadSheet();
+    	imp.readDataIntoDetectorListFromSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\detOutMainlines_1202.xls");
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
-    	imp.calibrateFundamentalDiagrams();
+//    	imp.calibrateFundamentalDiagrams();
 //    	imp.readFundamentalDiagramsFromXML();
-//    	imp.readFundamentalDiagramsFromXML_AIMSUN();
+    	imp.readFundamentalDiagramsFromXML_AIMSUN();
     	imp.createCellStructure();
     	imp.runImputation();
-    	imp.marshallIntoXML(imp.getMainScenario());
+    	imp.splitMegaCells();
+    	imp.writeDemandsAndSplitRatiosToSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\detOutMainlines_1202_out.xls");
+//    	imp.marshallIntoXML(imp.getMainScenario());
     }
 }
