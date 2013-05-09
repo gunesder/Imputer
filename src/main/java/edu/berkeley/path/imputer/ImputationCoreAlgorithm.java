@@ -14,6 +14,7 @@ public class ImputationCoreAlgorithm {
 	
 	// fields
 		// primary fields
+		private double totalTime = 24; // [hours] 1 day default
 		private LinkedList<Cell> cellData = new LinkedList<Cell>();
 		private HashMap<Integer,Detector> detectorList = new HashMap<Integer,Detector>();
 		private Double demandTimeStep = 5.0/60.0; // [hours] 5 minute default
@@ -33,11 +34,11 @@ public class ImputationCoreAlgorithm {
 		private ArrayList<Boolean> orPresent = new ArrayList<Boolean>();
 		private ArrayList<Boolean> frPresent = new ArrayList<Boolean>();
 		// derived fields (matrix quantities)
-		private Double[][] measuredDensity = new Double[288][1];
-		private Double[][] measuredFlow = new Double[288][1];
-		private Double[][] measuredSpeed = new Double[288][1];
-		private Double[][] measuredOrFlow = new Double[288][1];
-		private Double[][] measuredFrFlow = new Double[288][1];		
+		private Double[][] measuredDensity = new Double[(int) (totalTime/(5.0/60/0))][1];
+		private Double[][] measuredFlow = new Double[(int) (totalTime/(5.0/60/0))][1];
+		private Double[][] measuredSpeed = new Double[(int) (totalTime/(5.0/60/0))][1];
+		private Double[][] measuredOrFlow = new Double[(int) (totalTime/(5.0/60/0))][1];
+		private Double[][] measuredFrFlow = new Double[(int) (totalTime/(5.0/60/0))][1];		
 		// learning algorithm parameters
 	
 	// getters and setters
@@ -50,30 +51,34 @@ public class ImputationCoreAlgorithm {
 	}
 	
 	// constructors
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, double totalTime){
 		this.cellData = cells;
 		this.detectorList = detectors;
+		this.totalTime = totalTime;
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, double totalTime, boolean flwBoundary){
 		this.cellData = cells;
 		this.detectorList = detectors;
+		this.totalTime = totalTime;
 		this.downBoundaryCongested = flwBoundary;
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, Double simTimeStep){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, double totalTime, boolean flwBoundary, Double simTimeStep){
 		this.cellData = cells;
 		this.detectorList = detectors;
+		this.totalTime = totalTime;
 		this.downBoundaryCongested = flwBoundary;
 		this.simulationTimeStep = simTimeStep;
 		this.initializeDataMatrices();
 	}
 	
-	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, boolean flwBoundary, Double simTimeStep, Double demTimeStep){
+	public ImputationCoreAlgorithm(LinkedList<Cell> cells, HashMap<Integer,Detector> detectors, double totalTime, boolean flwBoundary, Double simTimeStep, Double demTimeStep){
 		this.cellData = cells;
 		this.detectorList = detectors;
+		this.totalTime = totalTime;
 		this.downBoundaryCongested = flwBoundary;
 		this.simulationTimeStep = simTimeStep;
 		this.demandTimeStep = demTimeStep;
@@ -210,11 +215,11 @@ public class ImputationCoreAlgorithm {
 //		imputeFR.add(true);
 //		imputeFR.add(false);
 		
-		measuredSpeed = MyUtilities.interpolateMatrix(measuredSpeed, (int) (24/this.simulationTimeStep));
-		measuredFlow = MyUtilities.interpolateMatrix(measuredFlow, (int) (24/this.simulationTimeStep));
-		measuredDensity = MyUtilities.interpolateMatrix(measuredDensity,(int) (24/this.simulationTimeStep));
-		measuredOrFlow = MyUtilities.interpolateMatrix(measuredOrFlow,(int) (24/this.simulationTimeStep));
-		measuredFrFlow = MyUtilities.interpolateMatrix(measuredFrFlow,(int) (24/this.simulationTimeStep));
+		measuredSpeed = MyUtilities.interpolateMatrix(measuredSpeed, (int) (totalTime/this.simulationTimeStep));
+		measuredFlow = MyUtilities.interpolateMatrix(measuredFlow, (int) (totalTime/this.simulationTimeStep));
+		measuredDensity = MyUtilities.interpolateMatrix(measuredDensity,(int) (totalTime/this.simulationTimeStep));
+		measuredOrFlow = MyUtilities.interpolateMatrix(measuredOrFlow,(int) (totalTime/this.simulationTimeStep));
+		measuredFrFlow = MyUtilities.interpolateMatrix(measuredFrFlow,(int) (totalTime/this.simulationTimeStep));
 		
 		// manually fixing FDparams for testing purposes:
 //		qmax.clear();
@@ -298,12 +303,12 @@ public class ImputationCoreAlgorithm {
 		// ************** Derive dj and BETA from known ramp flows *************************************
 		// *********************************************************************************************
 		
-		Double[] STime = MyUtilities.createIncrementVector(0.0, 24-this.simulationTimeStep, this.simulationTimeStep);
+		Double[] STime = MyUtilities.createIncrementVector(0.0, totalTime-this.simulationTimeStep, this.simulationTimeStep);
 		for (int ii=1;ii<STime.length;ii++){
 			
 			for (int j=0;j<numberOfNodes-2;j++){
 				
-				if (!impute.get(j)){
+				if (!impute.get(j) & false){ // TODO: temporarily disabled
 					
 					 Double Term1 = this.qmax.get(j+1) < this.w.get(j+1)*(this.rhojam.get(j+1) - measuredDensity[ii][j+1]) ? this.qmax.get(j+1) : this.w.get(j+1)*(this.rhojam.get(j+1)-measuredDensity[ii][j+1]);
 					 Double Term2 = this.qmax.get(j) < measuredDensity[ii][j]*this.vf.get(j) ? this.qmax.get(j) : measuredDensity[ii][j]*this.vf.get(j);
@@ -1659,56 +1664,56 @@ public class ImputationCoreAlgorithm {
 		for (int j=0;j<this.cellData.size()-1;j++){
 			
 			// Onramp Inputs
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OnrampInput,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OnrampInput,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			ArrayList<Double> arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j+1).setOnRampInput(arraylist);
 			// Onramp Demands
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Demand,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Demand,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j+1).setDemand(arraylist);
 			// DJ
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(DJ,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(DJ,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j+1).setDJ(arraylist);
 			// c (effective demands)
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(c,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(c,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j+1).setC(arraylist);
 			// Onramp Flow
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OrFlow,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OrFlow,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j+1).setOnRampFlow(arraylist);
 			// Given onramp flow (probably redundant)
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(orFlow_Giv,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(orFlow_Giv,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j+1).setOrFlowNonImputed(arraylist);
 			
 			// Velocity (simulated)
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setVelocity(arraylist);
 			// Offramp Flow
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FrFlow,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FrFlow,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setOffRampFlow(arraylist);
 			// Given Offramp Flow (probably redundant)
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setFrFlowNonImputed(arraylist);
 			// BETA (split ratios)
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(BETAF,j),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(BETAF,j),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setBeta(arraylist);
 			// cell outflows
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OutFl,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OutFl,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setOutFlow(arraylist);
 			// simulated flows at the corresponding detector locations
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FlowCompare,j),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FlowCompare,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setFlowCompare(arraylist);
 			// simulated densities
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,j),tratio,(int) (24/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,j),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setSimDensity(arraylist);			
 			
@@ -1716,7 +1721,7 @@ public class ImputationCoreAlgorithm {
 		
 		// First and Last Cells
 		// first:
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(orFLW_save,1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(orFLW_save,1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 		ArrayList<Double> arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getFirst().setOnRampInput(arraylist);
 		cellData.getFirst().setDemand(arraylist);
@@ -1727,23 +1732,23 @@ public class ImputationCoreAlgorithm {
 		cellData.getFirst().setDJ(arraylist);
 		cellData.getFirst().setC(arraylist);
 		// last:
-		vector = MyUtilities.scaleVector(MyUtilities.onesVector((int) (24/this.demandTimeStep)),0.0);
+		vector = MyUtilities.scaleVector(MyUtilities.onesVector((int) (totalTime/this.demandTimeStep)),0.0);
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setBeta(arraylist);
 		cellData.getLast().setOffRampFlow(arraylist);
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OutFl,OutFl[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(OutFl,OutFl[0].length-1),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setOutFlow(arraylist);
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FlowCompare,FlowCompare[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(FlowCompare,FlowCompare[0].length-1),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setFlowCompare(arraylist);
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,Nh_check[0].length-1),tratio,(int) (24/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,Nh_check[0].length-1),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setSimDensity(arraylist);	
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,Velocity[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,Velocity[0].length-1),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setVelocity(arraylist);
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,frFlow_Giv[0].length-1),1/simulationTimeStep),tratio,(int) (24/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,frFlow_Giv[0].length-1),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setFrFlowNonImputed(arraylist);
 			
