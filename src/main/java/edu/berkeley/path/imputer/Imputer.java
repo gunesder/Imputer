@@ -12,6 +12,8 @@ import javax.xml.validation.SchemaFactory;
 import jxl.NumberCell;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
+//import jxl.Workbook;
+//import jxl.read.biff.BiffException;
 
 import org.joda.time.Interval;
 
@@ -26,7 +28,6 @@ import edu.berkeley.path.model_objects.measurements.PeMSAggregate;
 import edu.berkeley.path.model_objects.measurements.VDS;
 import edu.berkeley.path.model_objects.measurements.PeMSStationAggregate;
 //import edu.berkeley.path.model_database_access.DBParams;
-import edu.berkeley.path.model_database_access.TestConfiguration;
 import edu.berkeley.path.model_database_access.measurements.PeMSStationAggregateReader;
 import edu.berkeley.path.model_database_access.measurements.VDSReader;
 
@@ -473,21 +474,21 @@ public class Imputer {
 	 * Reads fundamental diagram parameters from AIMSUN generated xml
 	 */
 	public void readFundamentalDiagramsFromXML_AIMSUN() {
-		for (int key: detectors.keySet()){
-			Detector d = detectors.get(key);
-			// find the corresponding FD profile
-			int i;
-			for (i=0;i<this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().size();i++){
-				if (Integer.parseInt(this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getSensorId()) == key){
-					break;
-				}
-			}
-			BigDecimal vf = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getFreeFlowSpeed();
-			double w = 0.0;
-			BigDecimal q_max = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getCapacity();
-			d.getFdParams().setFD(vf.doubleValue(), w, q_max.doubleValue());
-			detectors.put(key, d);
-		}
+//		for (int key: detectors.keySet()){
+//			Detector d = detectors.get(key);
+//			// find the corresponding FD profile
+//			int i;
+//			for (i=0;i<this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().size();i++){
+//				if (Integer.parseInt(this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getSensorId()) == key){
+//					break;
+//				}
+//			}
+//			BigDecimal vf = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getFreeFlowSpeed();
+//			double w = 0.0;
+//			BigDecimal q_max = this.mainScenario.getFundamentalDiagramProfileSet().getFundamentalDiagramProfile().get(i).getFundamentalDiagram().get(0).getCapacity();
+//			d.getFdParams().setFD(vf.doubleValue(), w, q_max.doubleValue());
+//			detectors.put(key, d);
+//		}
 		
 		
 	}

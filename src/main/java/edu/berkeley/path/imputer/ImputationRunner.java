@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import javax.xml.bind.JAXBException;
 
-import jxl.read.biff.BiffException;
+//import jxl.read.biff.BiffException;
 
 import core.DatabaseException;
 import edu.berkeley.path.beats.simulator.BeatsException;
@@ -28,7 +28,7 @@ public class ImputationRunner
 	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12.xml";
 	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_BaseCase_13.04.12_out.xml";
 	
-    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException, BiffException
+    public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException
     {
     	Imputer imp = new Imputer(inputFileName,outputFileName,startTime,totalTime);
     	//Scenario scenario = imp.readAndUnmarshallXML();
@@ -37,7 +37,7 @@ public class ImputationRunner
     	imp.createLinkStructureFromMainScenario();
     	imp.createMainlineLinkStructureFromMainScenario();
 //    	imp.readDataIntoDetectorListFromDatabase();
-    	imp.readDataIntoDetectorListFromSpreadSheet();
+//    	imp.readDataIntoDetectorListFromSpreadSheet();
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
     	imp.calibrateFundamentalDiagrams();
