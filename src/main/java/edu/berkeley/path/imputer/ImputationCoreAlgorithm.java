@@ -1653,13 +1653,15 @@ public class ImputationCoreAlgorithm {
 		Double[] vector = MyUtilities.onesVector(Velocity.length);
 		for (int j=0;j<Velocity.length;j++){
 			for (int k=0;k<Velocity[0].length;k++){
-				Velocity[j][k] = Math.min(70.0,InFl[j][k]/Nh_check[j][k]/simulationTimeStep*linkLength.get(k));
+//				Velocity[j][k] = Math.min(70.0,InFl[j][k]/Nh_check[j][k]/simulationTimeStep*linkLength.get(k));
+				Velocity[j][k] = InFl[j][k]/Nh_check[j][k]/simulationTimeStep*linkLength.get(k);
 			}			
 		}
 		
-		FrFlow = MyUtilities.assignColumn(FrFlow, MyUtilities.scaleVector(MyUtilities.onesVector(FrFlow.length), 0.0), FrFlow[0].length-1);
-		frPresent.set(frPresent.size()-1, false);
-		orPresent.set(frPresent.size()-1, false);
+		// these are probably not required
+//		FrFlow = MyUtilities.assignColumn(FrFlow, MyUtilities.scaleVector(MyUtilities.onesVector(FrFlow.length), 0.0), FrFlow[0].length-1);
+//		frPresent.set(frPresent.size()-1, false);
+//		orPresent.set(frPresent.size()-1, false);
 		
 		for (int j=0;j<this.cellData.size()-1;j++){
 			
@@ -1689,7 +1691,7 @@ public class ImputationCoreAlgorithm {
 			cellData.get(j+1).setOrFlowNonImputed(arraylist);
 			
 			// Velocity (simulated)
-			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,j),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
+			vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Velocity,j),tratio,(int) (totalTime/this.demandTimeStep)));
 			arraylist = new ArrayList<Double>(Arrays.asList(vector));
 			cellData.get(j).setVelocity(arraylist);
 			// Offramp Flow
@@ -1745,7 +1747,7 @@ public class ImputationCoreAlgorithm {
 		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Nh_check,Nh_check[0].length-1),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setSimDensity(arraylist);	
-		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(Velocity,Velocity[0].length-1),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));
+		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.fetchColumn(Velocity,Velocity[0].length-1),tratio,(int) (totalTime/this.demandTimeStep)));
 		arraylist = new ArrayList<Double>(Arrays.asList(vector));
 		cellData.getLast().setVelocity(arraylist);
 		vector = MyUtilities.meanColumns(MyUtilities.reshapeVectorIntoMatrix(MyUtilities.scaleVector(MyUtilities.fetchColumn(frFlow_Giv,frFlow_Giv[0].length-1),1/simulationTimeStep),tratio,(int) (totalTime/this.demandTimeStep)));

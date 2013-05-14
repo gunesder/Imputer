@@ -42,9 +42,9 @@ public class ImputationRunner
     	imp.readDataIntoDetectorListFromSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\detOutMainlines_1202.xls");
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
-//    	imp.calibrateFundamentalDiagrams();
+    	imp.calibrateFundamentalDiagrams();
 //    	imp.readFundamentalDiagramsFromXML();
-    	imp.readFundamentalDiagramsFromXML_AIMSUN();
+//    	imp.readFundamentalDiagramsFromXML_AIMSUN();
     	imp.createCellStructure();
     	imp.runImputation();
     	imp.splitMegaCells();
