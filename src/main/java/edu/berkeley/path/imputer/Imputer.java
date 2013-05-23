@@ -393,30 +393,40 @@ public class Imputer {
 		// Read absolute detector info and 5 minute data into the hashmap (some fields not important for fake detectors, left blank or 0 for the time being)
 		for (int key: detectors.keySet()){
 			Detector d = detectors.get(key);
-			NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(4, rowIndex);
+			// find row index
+			while(true){
+				NumberCell nc2 = (NumberCell) workbook.getSheet(0).getCell(0, rowIndex);
+				if (nc2.getValue()==key){
+					break;
+				}
+				rowIndex++;
+			}
+			NumberCell nc = (NumberCell) workbook.getSheet(0).getCell(4, rowIndex); // Postmile
 			d.setAbsolutePM(nc.getValue());
 			d.setDetectorLength(0.0);
-			d.setDetectorName(workbook.getSheet(0).getCell(1, rowIndex).getContents());		
+			d.setDetectorName(workbook.getSheet(0).getCell(1, rowIndex).getContents());	// Name	
 			d.setFreewayDirection("");
 			d.setFreewayNumber(0);
 			d.setLatitude(0.0);
 			d.setLongitude(0.0);
-			NumberCell nc1 = (NumberCell) workbook.getSheet(0).getCell(13, rowIndex);
+			NumberCell nc1 = (NumberCell) workbook.getSheet(0).getCell(13, rowIndex); // Number of Lanes
 			Double temp = nc1.getValue();
 			d.setNumberOfLanes(temp.intValue());
 			for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
-				NumberCell ncSpeed = (NumberCell) workbook.getSheet(0).getCell(6, k);
-				NumberCell ncFlow = (NumberCell) workbook.getSheet(0).getCell(5, k);
+				NumberCell ncSpeed = (NumberCell) workbook.getSheet(0).getCell(6, k); // Speed
+				NumberCell ncFlow = (NumberCell) workbook.getSheet(0).getCell(5, k); // Flow
 				d.addDatumToSpeed(ncSpeed.getValue());
 				d.addDatumToFlow(ncFlow.getValue()/d.getNumberOfLanes());
 				d.addDatumToDensity(ncFlow.getValue()/ncSpeed.getValue()/d.getNumberOfLanes());
 			}
-			if (key == 352) {
-				d.setHealthStatus(0.0);
-			} else {
+			nc = (NumberCell) workbook.getSheet(0).getCell(9, rowIndex); // Health
+			if (nc.getValue() == 0) {
 				d.setHealthStatus(100.0);
+			} else {
+				d.setHealthStatus(0.0);
 			}
-			rowIndex += totalTimeInHours*60/5;
+			rowIndex = 1;
+			//rowIndex += totalTimeInHours*60/5;
 		}
 								
 	}
@@ -582,39 +592,122 @@ public class Imputer {
 	}
 	public void writeDemandsAndSplitRatiosToSpreadSheet(String outFilename) throws BiffException, IOException, RowsExceededException, WriteException, IndexOutOfBoundsException {
 		
-		WritableWorkbook workbook = Workbook.createWorkbook(new File(outFilename));
+		Workbook existingWorkbook = Workbook.getWorkbook(new File(outFilename));
+		WritableWorkbook workbookCopy = Workbook.createWorkbook(new File("Aimsun\\output.xls"), existingWorkbook);
 		
-		workbook.createSheet("Sheet1", 0);
+				
 		// add labels first row
-		workbook.getSheet(0).addCell(new Label(0,0,"Detector Name (cell)"));
-		workbook.getSheet(0).addCell(new Label(1,0,"Split Ratios"));
-		workbook.getSheet(0).addCell(new Label(2,0,"Offramp Flows"));
-		workbook.getSheet(0).addCell(new Label(3,0,"Demands"));
-		workbook.getSheet(0).addCell(new Label(4,0,"Flows"));
-		workbook.getSheet(0).addCell(new Label(5,0,"Speeds"));
+		workbookCopy.getSheet(0).addCell(new Label(15,0,"Split Ratios"));
+		workbookCopy.getSheet(0).addCell(new Label(16,0,"Offramp Flows"));
+		workbookCopy.getSheet(0).addCell(new Label(17,0,"Demands"));
+		workbookCopy.getSheet(0).addCell(new Label(18,0,"Flows"));
+		workbookCopy.getSheet(0).addCell(new Label(19,0,"Speeds"));
 		int rowIndex = 1;
 		for (Cell c: splitCells){
 			
-			// detector name
-			workbook.getSheet(0).addCell(new Label(0,rowIndex,c.getDetectorML().getDetectorName().toString()));
+			// find row index
+			while(true){
+				NumberCell nc2 = (NumberCell) workbookCopy.getSheet(0).getCell(0, rowIndex);
+				if (nc2.getValue()==c.getDetectorML().getSensorID()){
+					break;
+				}
+				rowIndex++;
+			}
 			
-			// fill in data vectors
+			// fill in mainline data columns
 			for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
 				
-				workbook.getSheet(0).addCell(new Number(1,k,c.getBeta().get(k-rowIndex)));
-				workbook.getSheet(0).addCell(new Number(2,k,c.getOffRampFlow().get(k-rowIndex)));
-				workbook.getSheet(0).addCell(new Number(3,k,c.getOnRampInput().get(k-rowIndex)));
-				workbook.getSheet(0).addCell(new Number(4,k,c.getFlowCompare().get(k-rowIndex)));
-				workbook.getSheet(0).addCell(new Number(5,k,c.getVelocity().get(k-rowIndex)));
+				workbookCopy.getSheet(0).addCell(new Number(18,k,c.getFlowCompare().get(k-rowIndex)));
+				workbookCopy.getSheet(0).addCell(new Number(19,k,c.getVelocity().get(k-rowIndex)));
+				
+			}
+			rowIndex = 1;
+			
+			// if the cell has onramp, find the detector id and fill corresponding columns (assumption: cells have at most one on-ramp or off-ramp)
+			int onrampLinkID = 0;
+			if (c.getLinks().getFirst().getUpLinks().size()>1){
+			// By our assumption (above), there are at most 2 upstream links for each mainline link
+				onrampLinkID = c.getLinks().getFirst().getUpLinks().get(0);
+				for (Link mlLink:mainlineLinks){
+					if (mlLink.getLinkID()==onrampLinkID){
+						onrampLinkID = c.getLinks().getFirst().getUpLinks().get(1);
+						break;
+					}
+				}
+				// find associated detector
+				int onrampDetId = 0;
+				for(int key: detectors.keySet()){
+					if (detectors.get(key).getLinkAssoc() == onrampLinkID){
+						onrampDetId = detectors.get(key).getSensorID();
+					}
+				}
+				
+				// find row index
+				while(true){
+					NumberCell nc2 = (NumberCell) workbookCopy.getSheet(0).getCell(0, rowIndex);
+					if (nc2.getValue()==onrampDetId){
+						break;
+					}
+					rowIndex++;
+				}
+				for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
+
+					workbookCopy.getSheet(0).addCell(new Number(17,k,c.getOnRampInput().get(k-rowIndex)));
+					
+				}
+				rowIndex = 1;
+			}
+			
+			
+			
+			// if the cell has offramp, find the detector id and fill corresponding columns (assumption: cells have at most one on-ramp or off-ramp)
+			int offrampLinkID = 0;
+			if (c.getLinks().getLast().getDownLinks().size()>1){
+				// By our assumption (above), there are at most 2 upstream links for each mainline link
+				offrampLinkID = c.getLinks().getLast().getDownLinks().get(0);
+				for (Link mlLink:mainlineLinks){
+					if (mlLink.getLinkID()==offrampLinkID){
+						offrampLinkID = c.getLinks().getLast().getDownLinks().get(1);
+						break;
+					}
+				}
+				
+				// find associated detector
+				int offrampDetId = 0;
+				for(int key: detectors.keySet()){
+					if (detectors.get(key).getLinkAssoc() == offrampLinkID){
+						offrampDetId = detectors.get(key).getSensorID();
+					}
+				}
+				
+				// find row index
+				while(true){
+					NumberCell nc2 = (NumberCell) workbookCopy.getSheet(0).getCell(0, rowIndex);
+					if (nc2.getValue()==offrampDetId){
+						break;
+					}
+					rowIndex++;
+				}
+				
+				for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
+
+					workbookCopy.getSheet(0).addCell(new Number(15,k,c.getBeta().get(k-rowIndex)));
+					workbookCopy.getSheet(0).addCell(new Number(16,k,c.getOffRampFlow().get(k-rowIndex)));
+					
+				}
+				
+				rowIndex = 1;
 				
 			}
 			
-			rowIndex += totalTimeInHours*60/5;
+			// rowIndex += totalTimeInHours*60/5;
+			rowIndex = 1;
 			
 		}
 		
-		workbook.write();
-		workbook.close();
+		workbookCopy.write();
+		workbookCopy.close();
+		existingWorkbook.close();
 		
 	}
 	
