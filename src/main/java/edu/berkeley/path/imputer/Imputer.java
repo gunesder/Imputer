@@ -419,7 +419,7 @@ public class Imputer {
 				d.addDatumToFlow(ncFlow.getValue()/d.getNumberOfLanes());
 				d.addDatumToDensity(ncFlow.getValue()/ncSpeed.getValue()/d.getNumberOfLanes());
 			}
-			nc = (NumberCell) workbook.getSheet(0).getCell(9, rowIndex); // Health
+			nc = (NumberCell) workbook.getSheet(0).getCell(14, rowIndex); // Health
 			if (nc.getValue() == 0) {
 				d.setHealthStatus(100.0);
 			} else {
@@ -653,6 +653,7 @@ public class Imputer {
 				for (int k=rowIndex; k<rowIndex+totalTimeInHours*60/5; k++){
 
 					workbookCopy.getSheet(0).addCell(new Number(17,k,c.getOnRampInput().get(k-rowIndex)));
+					workbookCopy.getSheet(0).addCell(new Number(18,k,c.getOnRampInput().get(k-rowIndex)));
 					
 				}
 				rowIndex = 1;
@@ -693,6 +694,7 @@ public class Imputer {
 
 					workbookCopy.getSheet(0).addCell(new Number(15,k,c.getBeta().get(k-rowIndex)));
 					workbookCopy.getSheet(0).addCell(new Number(16,k,c.getOffRampFlow().get(k-rowIndex)));
+					workbookCopy.getSheet(0).addCell(new Number(18,k,c.getOffRampFlow().get(k-rowIndex)));
 					
 				}
 				
