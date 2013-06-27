@@ -642,6 +642,9 @@ public class Imputer {
 					}
 				}
 				
+				if (onrampDetId == 0)
+					continue;
+				
 				// find row index
 				while(true){
 					NumberCell nc2 = (NumberCell) workbookCopy.getSheet(0).getCell(0, rowIndex);
@@ -680,6 +683,9 @@ public class Imputer {
 						offrampDetId = detectors.get(key).getSensorID();
 					}
 				}
+				
+				if (offrampDetId == 0)
+					continue;
 				
 				// find row index
 				while(true){

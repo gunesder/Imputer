@@ -545,7 +545,7 @@ public class ImputationCoreAlgorithm {
 		}
 		
 		Double[][] cBest = c;
-		int iterBound_D_Beta = iterMax+1;
+		int iterBound_D_Beta = iterMax+1; // Currently Deactivated
 		int startIterBound = 10;
 		
 		boolean[] flags = new boolean[numberOfNodes];

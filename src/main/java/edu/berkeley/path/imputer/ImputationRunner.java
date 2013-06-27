@@ -24,11 +24,11 @@ public class ImputationRunner
 			  // YYYY, MM, DD, HH, MM, TIME ZONE
 		         2010,  1,  2,  0,  0, org.joda.time.DateTimeZone.forID("America/Los_Angeles")
 		    );
-	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(1);
+	public static final org.joda.time.Duration totalTime = org.joda.time.Duration.standardHours(2);
 //	public static final String inputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE.xml";
 //	public static final String outputFileName = System.getProperty("user.dir") + "\\NetworkAConfig_NE_out.xml";
-	public static final String inputFileName = System.getProperty("user.dir") + "\\Aimsun\\ImputationCode_1175.xml";
-	public static final String outputFileName = System.getProperty("user.dir") + "\\Aimsun\\ImputationCode_1175_out.xml";
+	public static final String inputFileName = System.getProperty("user.dir") + "\\Aimsun\\ImputationCode_2282104.xml";
+	public static final String outputFileName = System.getProperty("user.dir") + "\\Aimsun\\ImputationCode_2282104_out.xml";
 	
     public static void main ( String[] args ) throws JAXBException, BeatsException, IOException, SQLException, BiffException, RowsExceededException, WriteException, IndexOutOfBoundsException
     {
@@ -39,7 +39,7 @@ public class ImputationRunner
     	imp.createLinkStructureFromMainScenario();
     	imp.createMainlineLinkStructureFromMainScenario();
 //    	imp.readDataIntoDetectorListFromDatabase();
-    	imp.readDataIntoDetectorListFromSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\PeMS_5m_010100000000199_1175.xls");
+    	imp.readDataIntoDetectorListFromSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\PeMS_5m_SANDAG_Imputer2_2282104.xls");
     	// imp.exportMainlineDataToText();
     	// imp.exportDetectors();
     	imp.calibrateFundamentalDiagrams();
@@ -48,7 +48,7 @@ public class ImputationRunner
     	imp.createCellStructure();
     	imp.runImputation();
     	imp.splitMegaCells();
-    	imp.writeDemandsAndSplitRatiosToSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\PeMS_5m_010100000000199_1175.xls");
+    	imp.writeDemandsAndSplitRatiosToSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\PeMS_5m_SANDAG_Imputer2_2282104.xls");
 //    	imp.marshallIntoXML(imp.getMainScenario());
     }
 }
