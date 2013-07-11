@@ -247,8 +247,28 @@ public class Imputer {
 	/**
 	 * Reads the network geometry from mainScenario and populates the mainlineLinks list
 	 */
-	public void createMainlineLinkStructureFromMainScenario() {
+	public void createMainlineLinkStructureFromMainScenario(int routeID) {
 		for (int i=0; i<this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().size(); i++){
+			if (routeID != 0){
+				int routeIndex = 0;
+				// find the route index
+				for (routeIndex=0; routeIndex<this.mainScenario.getRoutes().getRoute().size(); routeIndex++){
+					if (Integer.parseInt(this.mainScenario.getRoutes().getRoute().get(routeIndex).getId()) == routeID){
+						break;
+					}						
+				}				
+				// go over the route and see if the link belongs to the given route
+				boolean linkInRoute = false;
+				for (int k=0; k<this.mainScenario.getRoutes().getRoute().get(routeIndex).getLinkReferences().getLinkReference().size(); k++){
+					if (this.mainScenario.getRoutes().getRoute().get(routeIndex).getLinkReferences().getLinkReference().get(k).getId().contentEquals(this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getId())){
+						linkInRoute = true;
+						break;
+					}
+				}
+				if (!linkInRoute){
+					continue;
+				}
+			}
 			// collect only mainline links in the links list
 			if (this.mainScenario.getNetworkList().getNetwork().get(0).getLinkList().getLink().get(i).getType().equals("freeway")){
 				Link l = new Link(); boolean hasDetector = false; Detector detectorML = new Detector();

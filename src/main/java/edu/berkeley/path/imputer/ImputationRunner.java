@@ -37,7 +37,7 @@ public class ImputationRunner
     	imp.createDetectorListFromMainScenario();
     	imp.createNodeStructureFromMainScenario();
     	imp.createLinkStructureFromMainScenario();
-    	imp.createMainlineLinkStructureFromMainScenario();
+    	imp.createMainlineLinkStructureFromMainScenario(1);
 //    	imp.readDataIntoDetectorListFromDatabase();
     	imp.readDataIntoDetectorListFromSpreadSheet(System.getProperty("user.dir") + "\\Aimsun\\PeMS_5m_SANDAG_Imputer2_2282104.xls");
     	// imp.exportMainlineDataToText();
